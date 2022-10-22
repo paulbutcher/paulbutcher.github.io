@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /repositories/
-title: GitHub
+title: projects
 nav: true
 nav_order: 3
 ---

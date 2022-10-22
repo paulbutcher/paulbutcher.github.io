@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Affiliations</a>. Address. Contacts. Moto. Etc.
+subtitle: 
 
 profile:
   align: right
@@ -15,8 +15,8 @@ selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
 ---
 
-Write your biography here. Tell the world about yourself. Link to your favorite [subreddit](http://reddit.com). You can put a picture in, too. The code is already in, just name your picture `prof_pic.jpg` and put it in the `img/` folder.
+I am a technology start-up veteran, a consultant for start-ups and investors, and an author.
 
-Put your address / P.O. box / other info right below your picture. You can also disable any these elements by editing `profile` property of the YAML header of your `_pages/about.md`. Edit `_bibliography/papers.bib` and Jekyll will render your [publications page](/al-folio/publications/) automatically.
+The senior technologist behind several successful start-ups, I have repeatedly driven the entrepreneurial process from business plan and prototyping through to execution and exit. I was Chief Software Architect of SwiftKey, subsequently acquired by Microsoft. I went on to co-found English Language iTutoring, subsequently acquired by Cambridge Assessment English, and am currently CTO of XLIO Ventures.
 
-Link to your social media connections, too. This theme is set up to use [Font Awesome icons](http://fortawesome.github.io/Font-Awesome/) and [Academicons](https://jpswalsh.github.io/academicons/), like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them.
+I am the author of [Seven Concurrency Models: When Threads Unravel](https://pragprog.com/titles/pb7con/seven-concurrency-models-in-seven-weeks/) and [Debug It!: Find, repair, and prevent bugs in your code](https://pragprog.com/titles/pbdp/debug-it/), both published by Pragmatic Bookshelf.

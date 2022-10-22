@@ -1,12 +1,8 @@
 github_users:
-  - torvalds
-  - alshedivat
+  - paulbutcher
 
 github_repos:
-  - alshedivat/al-folio
-  - twbs/bootstrap
-  - jekyll/jekyll
-  - jquery/jquery
-  - FortAwesome/Font-Awesome
-  - jpswalsh/academicons
-  - mathjax/MathJax
+  - flix/flix
+  - paulbutcher/ScalaMock
+  - paulbutcher/electron-app
+  - paulbutcher/lein-lambda

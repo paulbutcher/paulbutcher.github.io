@@ -1,11 +1,10 @@
           
           <div class="news">
-            <h2>news</h2>
-            {% if site.news != blank -%} 
+            <h2>recent posts</h2>
             {%- assign news_size = site.news | size -%}
             <div class="table-responsive" {% if site.news_scrollable and news_size > 3 %}style="max-height: 10vw"{% endif %}>
               <table class="table table-sm table-borderless">
-              {%- assign news = site.news | reverse -%}
+              {%- assign news = site.posts | reverse -%}
               {% if site.news_limit %}
               {% assign news_limit = site.news_limit %}
               {% else %}
@@ -25,7 +24,4 @@
               {%- endfor %} 
               </table>
             </div>
-          {%- else -%} 
-            <p>No news so far...</p>
-          {%- endif %} 
           </div>

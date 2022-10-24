@@ -19,4 +19,4 @@ I am a technology start-up veteran, a consultant for start-ups and investors, an
 
 I was Chief Software Architect of SwiftKey, subsequently acquired by Microsoft. I went on to co-found English Language iTutoring, subsequently acquired by Cambridge Assessment English, and am currently CTO of XLIO Ventures.
 
-I am the author of [Seven Concurrency Models: When Threads Unravel](https://pragprog.com/titles/pb7con/seven-concurrency-models-in-seven-weeks/) and [Debug It!: Find, repair, and prevent bugs in your code](https://pragprog.com/titles/pbdp/debug-it/), both published by Pragmatic Bookshelf.
+I am the author of [Seven Concurrency Models: When Threads Unravel](https://pragprog.com/titles/pb7con/seven-concurrency-models-in-seven-weeks/) and [Debug It!: Find, Repair, and Prevent Bugs in Your Code](https://pragprog.com/titles/pbdp/debug-it/), both published by Pragmatic Bookshelf.

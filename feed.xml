@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.3.2">Jekyll</generator><link href="https://paulbutcher.com/feed.xml" rel="self" type="application/atom+xml"/><link href="https://paulbutcher.com/" rel="alternate" type="text/html" hreflang="en"/><updated>2023-03-11T11:04:16+00:00</updated><id>https://paulbutcher.com/feed.xml</id><title type="html">blank</title><subtitle>Paul Butcher&apos;s personal site</subtitle><entry><title type="html">An introduction to Datalog in Flix: Part 4</title><link href="https://paulbutcher.com/blog/2022/datalog4/" rel="alternate" type="text/html" title="An introduction to Datalog in Flix: Part 4"/><published>2022-10-26T00:00:00+00:00</published><updated>2022-10-26T00:00:00+00:00</updated><id>https://paulbutcher.com/blog/2022/datalog4</id><content type="html" xml:base="https://paulbutcher.com/blog/2022/datalog4/"><![CDATA[<p>This is part 4 of a series. [<a href="http://paulbutcher.com/blog/2022/datalog1/">Part 1</a> | <a href="http://paulbutcher.com/blog/2022/datalog2/">Part 2</a> | <a href="http://paulbutcher.com/blog/2022/datalog3/">Part 3</a> | Part 4]</p> <p>The code to accompany this series is available <a href="https://github.com/paulbutcher/datalog-flix">here</a>.</p> <p>In the previous part of this series, we saw how to use lattice semantics to calculate all our degrees of separation within the Game of Thrones dataset in one pass. But we didn’t quite get to our final solution because we weren’t yet calculating counts of the number of characters at each degree.</p> <p>In this part, we’ll tie off that loose end, and discover why lattice semantics are “lattice” semantics in the process.</p> <p>Of course, we could just count up our values in Flix (not Datalog) code, and that would be a perfectly reasonable approach. But as we’ll see Datalog gives us a really elegant solution by leveraging <em>partial ordering</em>.</p> <h2 id="partial-ordering">Partial Ordering</h2> <p>So far we’ve been working with simple integers, and integers are (surprise!) <em>ordered</em>. So 1 is less than 2 and 3 is less than 126 and so on.</p> <p>In fact, not only are integers ordered, they <em>totally</em> ordered. You can pick any pair of numbers <code class="language-plaintext highlighter-rouge">a</code> and <code class="language-plaintext highlighter-rouge">b</code>, and at least one of <code class="language-plaintext highlighter-rouge">a &lt;= b</code> or <code class="language-plaintext highlighter-rouge">b &lt;= a</code> will be true (they might both be true if <code class="language-plaintext highlighter-rouge">a</code> equals <code class="language-plaintext highlighter-rouge">b</code>).</p> <p>But, not every set of values is totally ordered. A real world example of a partial ordering is ancestry; given two people a and b, it might easily be the case that <em>neither</em> “a is an ancestor of b” <em>nor</em> “b is an ancestor of a” is true.</p> <p>For example, “Eddard Stark is an ancestor of Arya Stark” is true. But neither “Cersei Lannister is an ancestor of Tyrion Lannister” nor “Tyrion Lannister is an ancestor of Cersei Lannister” are true.</p> <p>However, we can ask “who is the most recent common ancestor of Cersei and Tyrion” (in this case Tywin Lannister). We generally refer to this as the <em>least upper bound</em>.</p> <h2 id="least-upper-bound">Least Upper Bound</h2> <p>In part 3, we said that lattice semantics chose the “maximum” value from all possible values. This was a simplification: they actually chose the least upper bound.</p> <p>For integers, which we were working with in part 3, the least upper bound <em>is</em> the maximum value. But for other types, those that are partially ordered (as we saw with ancestry above), the least upper bound could be something else.</p> <p>An interesting example is sets. It may not be the case that either “set a is a subset of set b” or “set b is a subset of set a” is true. But they will always have a least upper bound which is the <em>union</em> of a and b.</p> <p>For example, the least upper bound of <code class="language-plaintext highlighter-rouge">Set#{"Tyrion Lannister", "Cersei Lannister"}</code> and <code class="language-plaintext highlighter-rouge">Set#{"Tyrion Lannister", "Arya Stark"}</code> is <code class="language-plaintext highlighter-rouge">Set#{"Tyrion Lannister", "Cersei Lannister", "Arya Stark"}</code>.</p> <blockquote> <p>This is where the “lattice” in lattice semantics comes from: a partially ordered set which defines a least upper bound is called a <a href="https://en.wikipedia.org/wiki/Lattice_(order)"><em>lattice</em></a> in mathematics.</p> </blockquote> <p>Happily, this is exactly what we need to solve our degrees of separation problem.</p> <h2 id="six-degrees-of-separation-take-3">Six Degrees of Separation, Take 3</h2> <p>As a reminder, here were the rules we used in part 3 of this series:</p> <pre><code class="language-flix">        Degree(x; Down(0)) :- Root(x).
+        Degree(x; n + Down(1)) :- Degree(y; n), Related(y, x).
+</code></pre> <p>Here are the new rules we’re going to add:</p> <pre><code class="language-flix">        AggregatedDegree(n; Set#{x}) :- fix Degree(x; n).
+        DegreeCount(n, Set.size(s)) :- fix AggregatedDegree(n; s).
+</code></pre> <p>We start by inferring new <code class="language-plaintext highlighter-rouge">AggregatedDegree</code> facts from the <code class="language-plaintext highlighter-rouge">Degree</code> facts we calculated previously. We’re using the fact that the least upper bound of a collection of sets is the union of those sets, so the value on the right side of the semicolon will be the union of all of the character names in <code class="language-plaintext highlighter-rouge">Degree</code>.</p> <blockquote> <p>You might be wondering what the <code class="language-plaintext highlighter-rouge">fix</code> is for in our new rules? If you look at the two sides of the rule (either side of the <code class="language-plaintext highlighter-rouge">:-</code>) you can see that on the left we’re using <code class="language-plaintext highlighter-rouge">n</code> as a normal value (it’s on the left of the semicolon), whereas on the right it’s a lattice value (it’s on the right of the semicolon). Flix requires that we use <code class="language-plaintext highlighter-rouge">fix</code> if we ever mix a value this way; it ensures that we completely calculate all the <code class="language-plaintext highlighter-rouge">Degree</code> facts before starting to create <code class="language-plaintext highlighter-rouge">AggregateDegree</code> facts.</p> </blockquote> <p>So now we have a number of <code class="language-plaintext highlighter-rouge">AggregatedDegree</code> facts, one for each degree of separation, where the right hand side is a set of all the characters of that degree. The final step is to convert those facts into <code class="language-plaintext highlighter-rouge">DegreeCount</code> facts by finding the size of each set.</p> <p>Here’s the whole thing. As you can see, it’s even more elegant than the solution we came up with in part 2 (which was already much simpler than we could have achieved without using Datalog).</p> <pre><code class="language-flix">def main(): Unit \ IO =
+
+    let relationshipTypes = "parents" :: "parentOf" :: "killed" :: "killedBy" ::
+        "serves" :: "servedBy" :: "guardianOf" :: "guardedBy" :: "siblings" ::
+        "marriedEngaged" :: "allies" :: Nil;
+    let relationships = Json.getRelationships(relationshipTypes);
+
+    let related = inject relationships into Related;
+
+    let rules = #{
+        Degree(x; Down(0)) :- Root(x).
+        Degree(x; n + Down(1)) :- Degree(y; n), Related(y, x).
+        AggregatedDegree(n; Set#{x}) :- fix Degree(x; n).
+        DegreeCount(n, Set.size(s)) :- fix AggregatedDegree(n; s).
+    };
+
+    let root = inject "Tyrion Lannister" :: Nil into Root;
+
+    query rules, related, root select (d, c) from DegreeCount(d, c) |&gt;
+        List.foreach(match (d, c) -&gt; println("Separated by degree ${d}: ${c}"))
+</code></pre> <p>And, for completeness, here’s what it outputs:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Separated by degree 6: 2                                                        
+Separated by degree 5: 14
+Separated by degree 4: 60
+Separated by degree 3: 104
+Separated by degree 2: 56
+Separated by degree 1: 6
+Separated by degree 0: 1
+</code></pre></div></div> <h2 id="conclusion">Conclusion</h2> <p>That’s it for our journey through Datalog and Flix. Please do experiment with other problems which can leverage Datalog: I’d love to see what you come up with!</p> <p>[<a href="http://paulbutcher.com/blog/2022/datalog1/">Part 1</a> | <a href="http://paulbutcher.com/blog/2022/datalog2/">Part 2</a> | <a href="http://paulbutcher.com/blog/2022/datalog3/">Part 3</a> | Part 4]</p>]]></content><author><name></name></author><category term="flix"/><category term="flix"/><category term="datalog"/><category term="logic-programming"/><summary type="html"><![CDATA[This is part 4 of a series. [Part 1 | Part 2 | Part 3 | Part 4]]]></summary></entry><entry><title type="html">An introduction to Datalog in Flix: Part 3</title><link href="https://paulbutcher.com/blog/2022/datalog3/" rel="alternate" type="text/html" title="An introduction to Datalog in Flix: Part 3"/><published>2022-10-25T00:00:00+00:00</published><updated>2022-10-25T00:00:00+00:00</updated><id>https://paulbutcher.com/blog/2022/datalog3</id><content type="html" xml:base="https://paulbutcher.com/blog/2022/datalog3/"><![CDATA[<p>This is part 3 of a series. [<a href="http://paulbutcher.com/blog/2022/datalog1/">Part 1</a> | <a href="http://paulbutcher.com/blog/2022/datalog2/">Part 2</a> | Part 3 | <a href="http://paulbutcher.com/blog/2022/datalog4/">Part 4</a>]</p> <p>The code to accompany this series is available <a href="https://github.com/paulbutcher/datalog-flix">here</a>.</p> <h2 id="harder-better-faster-stronger">Harder, Better, Faster, Stronger</h2> <p>It’s very common that we want to find the “best” solution to a problem. Perhaps we want the shortest route between two points? Or the fastest? Or the most efficient? Or…?</p> <p>Flix’s implementation of Datalog provides a feature known as “lattice semantics” (we’ll see why “lattice” later) which allows us to solve exactly these kinds of problems. To illustrate, consider the following function:</p> <pre><code class="language-flix">def foo(): List[(String, Int32)] =
+    let rules = #{
+        Foo("x", 1).
+        Foo("x", 2).
+        Foo("x", 5).
+        Foo("y", 2).
+        Foo("y", 3).
+    };
+    query rules select (x, y) from Foo(x, y)
+</code></pre> <p>This, unsurprisingly, just returns exactly the facts that we specified:</p> <pre><code class="language-flix">(x, 1) :: (x, 2) :: (x, 5) :: (y, 2) :: (y, 3) :: Nil
+</code></pre> <p>But now, let’s modify it so that it uses lattice semantics:</p> <pre><code class="language-flix">def foo(): List[(String, Int32)] =
+    let rules = #{
+        Foo("x"; 1).
+        Foo("x"; 2).
+        Foo("x"; 5).
+        Foo("y"; 2).
+        Foo("y"; 3).
+    };
+    query rules select (x, y) from Foo(x; y)
+</code></pre> <p>All we’ve done is replace the commas (<code class="language-plaintext highlighter-rouge">,</code>) in our original <code class="language-plaintext highlighter-rouge">Foo</code> rules with semicolons (<code class="language-plaintext highlighter-rouge">;</code>). What it now returns is:</p> <pre><code class="language-flix">(x, 5) :: (y, 3) :: Nil  
+</code></pre> <p>Switching to semicolons instructs Datalog to aggregate all the facts that have the same values on the left of the semicolon into a single fact, where the value on the right is the “maximum” of all the facts that are being combined. In our example above, the maximum value is 5 when the LHS is “x”, and 3 when it’s “y”.</p> <blockquote> <p>There is some subtlety in what we mean when we say “maximum”, as we’ll see later, but for simple integers then what we get is exactly the same as if we had used <code class="language-plaintext highlighter-rouge">Int32.max</code>.</p> </blockquote> <p>It seems like a small change, but it’s a small change that dramatically increases the power at our fingertips.</p> <h2 id="minimums">Minimums</h2> <p>Finding maximum values is great, but what if we want to find minimums instead? Flix allows us to reverse the sorting order of any type by using <code class="language-plaintext highlighter-rouge">Down</code>, so <code class="language-plaintext highlighter-rouge">Down[Int32]</code> sorts in the opposite order to <code class="language-plaintext highlighter-rouge">Int32</code>:</p> <pre><code class="language-flix">flix&gt; 1 &lt; 3                                                                    
+true                                                                            
+flix&gt; 4 &lt; 2
+false                                                                           
+flix&gt; Down(1) &lt; Down(3)
+false                                                                           
+flix&gt; Down(3) &lt; Down(2)
+true
+</code></pre> <p>Using <code class="language-plaintext highlighter-rouge">Down</code> in Datalog lattice semantics has exactly the effect you might imagine, allowing us to find minimum values instead of maximum values:</p> <pre><code class="language-flix">def bar(): List[(String, Down[Int32])] =
+    let rules = #{
+        Bar("x"; Down(1)).
+        Bar("x"; Down(2)).
+        Bar("x"; Down(5)).
+        Bar("y"; Down(2)).
+        Bar("y"; Down(3)).
+    };
+    query rules select (x, y) from Bar(x; y)
+</code></pre> <p>Which returns:</p> <pre><code class="language-flix">(x, 1) :: (y, 2) :: Nil 
+</code></pre> <p>So much for theory, let’s see how this helps us solve a real problem.</p> <h2 id="six-degrees-of-separation-take-2">Six Degrees of Separation, Take 2</h2> <p>In <a href="http://paulbutcher.com/blog/2022/datalog2/">part 2</a> of this series, we used Datalog to calculate degrees of separation between characters in Game of Thrones. The combination of logic programming and functional programming gave us a very simple solution. Now, we’re going to use lattice semantics to make it even better.</p> <p>As a refresher, here’s the code from part 2 which creates our <code class="language-plaintext highlighter-rouge">Related</code> facts:</p> <pre><code class="language-flix">    let relationshipTypes = "parents" :: "parentOf" :: "killed" :: "killedBy" ::
+        "serves" :: "servedBy" :: "guardianOf" :: "guardedBy" :: "siblings" ::
+        "marriedEngaged" :: "allies" :: Nil;
+    let relationships = Json.getRelationships(relationshipTypes);
+
+    let related = inject relationships into Related;
+</code></pre> <p>And here is code which uses lattice semantics to calculate the degree of separation of every character from some root character (in this case Tyrion) in a single pass:</p> <pre><code class="language-flix">    let rules = #{
+        Degree(x; Down(0)) :- Root(x).
+        Degree(x; n + Down(1)) :- Degree(y; n), Related(y, x).
+    };
+
+    let root = inject "Tyrion Lannister" :: Nil into Root;
+
+    println(query rules, related, root select (x, d) from Degree(x; d))
+</code></pre> <p>Before we go through this to see how it works, here’s the (truncated) output:</p> <pre><code class="language-flix">(Aegon Targaryen, 3) :: (Aeron Greyjoy, 3) :: (Aerys II Targaryen, 2) :: 
+(Akho, 3) :: (Alliser Thorne, 3) :: (Alton Lannister, 2) :: ...
+</code></pre> <p>To see how this works, imagine what would happen if we wrote the above <em>without</em> lattice semantics:</p> <pre><code class="language-flix">        Degree(x, 0) :- Root(x).
+        Degree(x, n + 1) :- Degree(y, n), Related(y, x).
+</code></pre> <p>This can be interpreted as saying: Character <code class="language-plaintext highlighter-rouge">x</code> is related to our root character by degree <code class="language-plaintext highlighter-rouge">n + 1</code> if we can find any character <code class="language-plaintext highlighter-rouge">y</code> which is related by degree <code class="language-plaintext highlighter-rouge">n</code>, and where <code class="language-plaintext highlighter-rouge">y</code> is related to <code class="language-plaintext highlighter-rouge">x</code>.</p> <p>So Cersei, for example, is related to Tyrion by degree 1 because Tyrion is related to Tyrion by degree 0, and Tyrion is related to Cersei.</p> <p>But … Cersei is also related to Tyrion by degree 2 because Tywin is related to Tyrion by degree 1, and Tywin is related to Cercei. And Cersei is related to Tyrion by degree 3 because Jaime is related to Tyrion by degree 2, and Jaime is related to Cersei. And so on.</p> <p>By contrast, Arya is not related to Tyrion at degree 1 or 2, but is related to him by degree 3, because Eddard Stark is related to Tyrion at degree 2, and Eddard is related to Arya. And Arya is related to Tyrion by degree 4 because Walder Frey is related to Tyrion at degree 3, and Walder is related to Arya. And so on.</p> <p>So, as you can probably already see, with non-lattice semantics this will never terminate; we’ll just keep calculating higher and higher degrees of separation until we run out of either memory or patience.</p> <p>But, with lattice semantics (and given that we’re using <code class="language-plaintext highlighter-rouge">Down</code> to reverse the ordering) we can constrain all of our degrees (the numbers on the right of the semicolon) to a single minimum value (whichever is the lowest they can ever take), which means:</p> <ol> <li>Our function terminates (always helpful!), and</li> <li>The degree calculations always return the length of the “shortest path” from Tyrion to every other character.</li> </ol> <h2 id="conclusion">Conclusion</h2> <p>So we’re almost there: we now have a list of every character along with their minimum degree of separation from Tyrion. But if we’re going to duplicate what we created in part 2, we need to go further and count how many characters there are at each degree of separation. We’ll see how to do that in the <a href="http://paulbutcher.com/blog/2022/datalog4/">next part</a> of this series.</p> <p>[<a href="http://paulbutcher.com/blog/2022/datalog1/">Part 1</a> | <a href="http://paulbutcher.com/blog/2022/datalog2/">Part 2</a> | Part 3 | <a href="http://paulbutcher.com/blog/2022/datalog4/">Part 4</a>]</p>]]></content><author><name></name></author><category term="flix"/><category term="flix"/><category term="datalog"/><category term="logic-programming"/><summary type="html"><![CDATA[This is part 3 of a series. [Part 1 | Part 2 | Part 3 | Part 4]]]></summary></entry><entry><title type="html">An introduction to Datalog in Flix: Part 2</title><link href="https://paulbutcher.com/blog/2022/datalog2/" rel="alternate" type="text/html" title="An introduction to Datalog in Flix: Part 2"/><published>2022-10-23T00:00:00+00:00</published><updated>2022-10-23T00:00:00+00:00</updated><id>https://paulbutcher.com/blog/2022/datalog2</id><content type="html" xml:base="https://paulbutcher.com/blog/2022/datalog2/"><![CDATA[<p>This is part 2 of a series. <a href="http://paulbutcher.com/blog/2022/datalog1/">Part 1</a> | Part 2 | <a href="http://paulbutcher.com/blog/2022/datalog3/">Part 3</a> | <a href="http://paulbutcher.com/blog/2022/datalog4/">Part 4</a>]</p> <p>The code to accompany this series is available <a href="https://github.com/paulbutcher/datalog-flix">here</a>.</p> <h2 id="injecting-facts">Injecting facts</h2> <p>In part 1 of this series, we used Datalog rules to infer new facts about characters in Game of Thrones.</p> <p>But where do our initial facts come from? In part 1 we simply included them as part of our Datalog, but this isn’t a scalable approach. We don’t want to have to manually re-enter all the details of all of the characters in Game of Thrones!</p> <p>What’s more likely is that we’ll read these facts from some external source; perhaps a database or a JSON file. This is where the power of Flix integration comes into play; we can use Flix, a powerful general purpose language, to read our data and get it into the right format. We then <em>inject</em> it into Datalog facts.</p> <p>So instead of writing this (from part 1):</p> <pre><code class="language-flix">def main(): Unit \ IO =
+    let got = #{
+        ParentOf("Tywin Lannister", "Cersei Lannister").
+        ParentOf("Tywin Lannister", "Jaime Lannister").
+        ParentOf("Cersei Lannister", "Joffrey Baratheon").
+        ParentOf("Cersei Lannister", "Myrcella Baratheon").
+
+        SiblingOf(x, y) :- ParentOf(p, x), ParentOf(p, y), if x != y.
+    };
+    let siblings = query got select (x, y) from SiblingOf(x, y);
+    println(siblings)
+</code></pre> <p>We can instead write:</p> <pre><code class="language-flix">def main(): Unit \ IO =
+    let parentList = ("Tywin Lannister", "Cersei Lannister") ::
+        ("Tywin Lannister", "Jaime Lannister") ::
+        ("Cersei Lannister", "Joffrey Baratheon") ::
+        ("Cersei Lannister", "Myrcella Baratheon") :: Nil;
+
+    let parents = inject parentList into ParentOf;
+
+    let got = #{
+        SiblingOf(x, y) :- ParentOf(p, x), ParentOf(p, y), if x != y.
+    };
+
+    let siblings = query got, parents select (x, y) from SiblingOf(x, y);
+
+    println(siblings)
+</code></pre> <p>Or, more realistically, we read our data from some external file (in this case, Jeffrey Lancaster’s amazingly detailed <a href="https://github.com/jeffreylancaster/game-of-thrones">Game of Thrones dataset</a>):</p> <pre><code class="language-flix">def main(): Unit \ IO =
+
+    let parents = inject Json.getParents() into ParentOf;
+
+    let got = #{
+        SiblingOf(x, y) :- ParentOf(p, x), ParentOf(p, y), if x != y.
+    };
+
+    let siblings = query got, parents select (x, y) from SiblingOf(x, y);
+
+    println(siblings)
+</code></pre> <p>Which gives us the following (truncated!) output:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(Aegon Targaryen, Jon Snow) :: (Aegon Targaryen, Rhaenys Targaryen) ::
+(Arya Stark, Bran Stark) :: (Arya Stark, Rickon Stark) ::
+(Arya Stark, Robb Stark) :: (Arya Stark, Sansa Stark) ::
+(Benjen Stark, Brandon Stark) :: (Benjen Stark, Eddard Stark) :: ...
+</code></pre></div></div> <h2 id="chaining-datalog">Chaining Datalog</h2> <p>The ability to move data back and forth between Datalog and Flix makes it very easy to use Datalog as part of solving a larger problem. To illustrate this, let’s consider working out whether Game of Thrones obeys the <a href="https://en.wikipedia.org/wiki/Six_degrees_of_separation">“six degrees of separation”</a> rule (the idea that all people are six or fewer connections away from each other; you might have come across it from the “Six Degrees of Kevin Bacon” game, or a mathematician’s Erdős number).</p> <p>As well as parentage, the dataset we’ve been using includes all kinds of other relationships between characters such as alliances, marriages and engagements, who serves whom, who killed whom, etc. Taking all of these relationships together, how many degrees of separation does it take from a major character (say Tyrion) to cover the entire cast of characters?</p> <p>(You can find the complete source <a href="https://github.com/paulbutcher/datalog-flix/tree/master/part2-3">here</a>).</p> <p>First, we extract our long list of relationships from our dataset:</p> <pre><code class="language-flix">    let relationshipTypes = "parents" :: "parentOf" :: "killed" :: "killedBy" ::
+        "serves" :: "servedBy" :: "guardianOf" :: "guardedBy" :: "siblings" ::
+        "marriedEngaged" :: "allies" :: Nil;
+    let relationships = Json.getRelationships(relationshipTypes);
+</code></pre> <p>We then inject that list into Datalog as a series of <code class="language-plaintext highlighter-rouge">Related</code> facts, just like we’ve seen above:</p> <pre><code class="language-flix">    let related = inject relationships into Related;
+</code></pre> <p>So now we have a set of facts like <code class="language-plaintext highlighter-rouge">Related("Tyrion Lannister", "Shae")</code> because Tyrion killed Shae, and <code class="language-plaintext highlighter-rouge">Related("Arya Stark", "Nymeria")</code> because Arya is guarded by Nymeria, and so on.</p> <p>Next, here is a Datalog rule which, given a set of characters we’ve already found, finds the characters with the next degree of separation:</p> <pre><code class="language-flix">    let rules = #{
+        NextDegree(x) :- AlreadyFound(y), Related(y, x), not AlreadyFound(x).
+    };
+</code></pre> <p>So a character <code class="language-plaintext highlighter-rouge">x</code> is in the next degree of separation if there is at least one character <code class="language-plaintext highlighter-rouge">y</code> who we have already and where <code class="language-plaintext highlighter-rouge">y</code> is related to <code class="language-plaintext highlighter-rouge">x</code>. Finally we exclude characters that we’ve already found.</p> <p>Here’s a function which uses the above to repeatedly calculate degrees of separation until we’ve exhausted all our characters:</p> <pre><code class="language-flix">    def degreesOfSeparation(deg: Int32, cs: List[String]): Unit \ IO = {
+        let alreadyFound = inject cs into AlreadyFound;
+        let nextDegree = query rules, alreadyFound, related select (x) from NextDegree(x);
+        match List.length(nextDegree) {
+            case count if count &gt; 0 =&gt;
+                println("Separated by degree ${deg}: ${count}");
+                degreesOfSeparation(deg + 1, cs ::: nextDegree)
+            case _ =&gt;
+                println("Nobody separated by degree ${deg}")
+        }
+    };
+</code></pre> <p>This function takes <code class="language-plaintext highlighter-rouge">deg</code> (a number representing the current degree of separation we’re looking at) and <code class="language-plaintext highlighter-rouge">cs</code> a list of characters we’ve already found.</p> <p>We start by creating our <code class="language-plaintext highlighter-rouge">AlreadyFound</code> facts from this list of characters, and then use the Datalog <code class="language-plaintext highlighter-rouge">rules</code> we defined above, along with our <code class="language-plaintext highlighter-rouge">AlreadyFound</code> and <code class="language-plaintext highlighter-rouge">Related</code> facts to generate <code class="language-plaintext highlighter-rouge">NextDegree</code> characters.</p> <p><code class="language-plaintext highlighter-rouge">List.length(nextDegree)</code> returns the length of this list, and we use <code class="language-plaintext highlighter-rouge">match</code> to determine whether this number is greater than zero.</p> <p>If it is, then we output the number of characters we just found, and recursively call <code class="language-plaintext highlighter-rouge">degreesOfSeparation</code> with <code class="language-plaintext highlighter-rouge">deg</code> increased by one, and a new set of characters which includes both our original root set and the characters we just found.</p> <p>Finally, we kick the whole thing off by calling <code class="language-plaintext highlighter-rouge">degreesOfSeparation</code> with our initial root character, Tyrion:</p> <pre><code class="language-flix">    degreesOfSeparation(1, "Tyrion Lannister" :: Nil)
+</code></pre> <p>Here’s what we get when we run it:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Separated by degree 1: 6                                                        
+Separated by degree 2: 56
+Separated by degree 3: 104
+Separated by degree 4: 60
+Separated by degree 5: 14
+Separated by degree 6: 2
+Nobody separated by degree 7
+</code></pre></div></div> <p>So yes, it does look like Game of Thrones does obey the six degrees of separation rule.</p> <p>Here’s the whole thing. I suggest trying to implement this in your favourite language to see just how easy the combination of Flix and Datalog makes this:</p> <pre><code class="language-flix">def main(): Unit \ IO =
+
+    let relationshipTypes = "parents" :: "parentOf" :: "killed" :: "killedBy" ::
+        "serves" :: "servedBy" :: "guardianOf" :: "guardedBy" :: "siblings" ::
+        "marriedEngaged" :: "allies" :: Nil;
+    let relationships = Json.getRelationships(relationshipTypes);
+
+    let related = inject relationships into Related;
+    let rules = #{
+        NextDegree(x) :- AlreadyFound(y), Related(y, x), not AlreadyFound(x).
+    };
+
+    def degreesOfSeparation(deg: Int32, cs: List[String]): Unit \ IO = {
+        let alreadyFound = inject cs into AlreadyFound;
+        let nextDegree = query rules, alreadyFound, related select (x) from NextDegree(x);
+        match List.length(nextDegree) {
+            case count if count &gt; 0 =&gt;
+                println("Separated by degree ${deg}: ${count}");
+                degreesOfSeparation(deg + 1, cs ::: nextDegree)
+            case _ =&gt;
+                println("Nobody separated by degree ${deg}")
+        }
+    };
+
+    degreesOfSeparation(1, "Tyrion Lannister" :: Nil)
+</code></pre> <h2 id="conclusion">Conclusion</h2> <p>Flix allows us to seamlessly move data back and forth between Flix and Datalog by <code class="language-plaintext highlighter-rouge">inject</code>ing facts from Flix to Datalog and <code class="language-plaintext highlighter-rouge">query</code>ing data from Datalog to Flix. This allows us to use the strengths of a general purpose language like Flix for things it’s good at (e.g. reading JSON files) and Datalog for things that it’s good at (e.g. inferring new facts from existing ones).</p> <p>In the next part of this series, we’ll look at one of the most powerful aspects of Flix’s implementation of Datalog: lattice semantics.</p> <p>[<a href="http://paulbutcher.com/blog/2022/datalog1/">Part 1</a> | Part 2 | <a href="http://paulbutcher.com/blog/2022/datalog3/">Part 3</a> | <a href="http://paulbutcher.com/blog/2022/datalog4/">Part 4</a>]</p>]]></content><author><name></name></author><category term="flix"/><category term="flix"/><category term="datalog"/><category term="logic-programming"/><summary type="html"><![CDATA[This is part 2 of a series. Part 1 | Part 2 | Part 3 | Part 4]]]></summary></entry><entry><title type="html">An introduction to Datalog in Flix: Part 1</title><link href="https://paulbutcher.com/blog/2022/datalog1/" rel="alternate" type="text/html" title="An introduction to Datalog in Flix: Part 1"/><published>2022-10-22T00:00:00+00:00</published><updated>2022-10-22T00:00:00+00:00</updated><id>https://paulbutcher.com/blog/2022/datalog1</id><content type="html" xml:base="https://paulbutcher.com/blog/2022/datalog1/"><![CDATA[<p>This is part 1 of a series. [Part 1 | <a href="http://paulbutcher.com/blog/2022/datalog2/">Part 2</a> | <a href="http://paulbutcher.com/blog/2022/datalog3/">Part 3</a> | <a href="http://paulbutcher.com/blog/2022/datalog4/">Part 4</a>]</p> <p>The code to accompany this series is available <a href="https://github.com/paulbutcher/datalog-flix">here</a>.</p> <h2 id="flix">Flix</h2> <p><a href="https://flix.dev">Flix</a> is an exciting new programming language which provides the power of strongly typed functional programming with the accessibility of “programmer friendly” languages like Go, Rust, or Ruby.</p> <p>This article isn’t about Flix, though, it’s about Datalog, and the reason why Flix plus Datalog creates something greater than the sum of its parts.</p> <h2 id="logic-programming">Logic Programming</h2> <p>Logic programming is one of the “big three” programming language paradigms:</p> <p><strong>Imperative programming</strong>: Languages like C, C++, Java, JavaScript, Go, Kotlin, …</p> <p><strong>Functional programming</strong>: Languages like Haskell, Clojure, Elixir, F#, …</p> <p><strong>Logic programming</strong>: Prolog, Datalog, Answer-set Programming, Mercury, …</p> <p>But … if it’s one of the three major programming paradigms, how come nobody uses it? Perhaps you created a couple of toy Prolog programs at college, but you’ve almost certainly not used it since then.</p> <p>There are good reasons why logic programming hasn’t caught on outside of a very few specialised areas, but that may be about to change. By including logic programming as a first-class element of the language, Flix allows us to seamlessly move between functional and logic programming, leveraging the strengths of both.</p> <p>This is analogous to the way that C# embeds database queries directly in the language through LINQ (and of course, you don’t use LINQ to implement every single method; instead you use C# for most of your code and drop into LINQ when it makes sense).</p> <p>In this first article, we’ll explore the basics of Datalog. And then in the rest of the series we’ll see how the combination of Datalog and Flix brings huge expressive power.</p> <h2 id="facts">Facts</h2> <p>Datalog programs are built from two components: <em>facts</em> and <em>rules</em>. Here are some facts about Game of Thrones:</p> <pre><code class="language-flix">GreatHouse("Stark").
+GreatHouse("Targaryen").
+
+ParentOf("Rhaegar Targaryen", "Jon Snow").
+ParentOf("Aerys II Targaryen", "Daenerys Targaryen").
+
+Coordinates("Kings Landing", 6.697, 12.759).
+Coordinates("Winterfell", 5.666, 6.218).
+</code></pre> <p>You can read these facts as:</p> <ul> <li>Stark is one of the Great Houses.</li> <li>Rhaegar Targaryen is a parent of Jon Snow.</li> <li>Kings Landing is located at coordinates 6.697, 12.759.</li> </ul> <p>A fact can have any number of terms of (almost) any type.</p> <h2 id="rules">Rules</h2> <p>Rules create new facts by making logical inferences from existing facts. Imagine, for example, that we know the following facts:</p> <pre><code class="language-flix">ParentOf("Tywin Lannister", "Cersei Lannister").
+ParentOf("Tywin Lannister", "Jaime Lannister").
+ParentOf("Cersei Lannister", "Joffrey Baratheon").
+ParentOf("Cersei Lannister", "Myrcella Baratheon").
+</code></pre> <p>Then we can create additional facts about who is who’s grandparent with the following rule:</p> <pre><code class="language-flix">GrandparentOf(x, y) :- ParentOf(x, c), ParentOf(c, y).
+</code></pre> <p>Which you can read as “<code class="language-plaintext highlighter-rouge">x</code> is a grandparent of <code class="language-plaintext highlighter-rouge">y</code> <strong>if</strong> we can find at least one person <code class="language-plaintext highlighter-rouge">c</code> where <code class="language-plaintext highlighter-rouge">x</code> is a parent of <code class="language-plaintext highlighter-rouge">c</code>, <strong>and</strong> <code class="language-plaintext highlighter-rouge">c</code> is a parent of <code class="language-plaintext highlighter-rouge">y</code>”.</p> <p>Here’s a complete Flix program which does this:</p> <pre><code class="language-flix">def main(): Unit \ IO =
+    let got = #{
+        ParentOf("Tywin Lannister", "Cersei Lannister").
+        ParentOf("Tywin Lannister", "Jaime Lannister").
+        ParentOf("Cersei Lannister", "Joffrey Baratheon").
+        ParentOf("Cersei Lannister", "Myrcella Baratheon").
+
+        GrandparentOf(x, y) :- ParentOf(x, c), ParentOf(c, y).
+    };
+    let grandparents = query got select (x, y) from GrandparentOf(x, y);
+    println(grandparents)
+</code></pre> <p>The code within the <code class="language-plaintext highlighter-rouge">#{ ... }</code> block is our datalog, the rest of the code is the Flix program that it’s embedded within. Our Datalog program is executed when we call <code class="language-plaintext highlighter-rouge">query</code> to extract the new <code class="language-plaintext highlighter-rouge">GrandparentOf</code> facts.</p> <p>Here’s what it outputs:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(Tywin Lannister, Joffrey Baratheon) :: (Tywin Lannister, Myrcella Baratheon) :: Nil
+</code></pre></div></div> <p>This is a list of 2-element tuples, with <code class="language-plaintext highlighter-rouge">::</code> indicating the list “cons” operator and <code class="language-plaintext highlighter-rouge">Nil</code> the end of the list. We can interpret these results as saying that Tywin Lannister is the grandparent of both Joffrey Baratheon and Myrcella Baratheon.</p> <p>Here’s a slightly different program which uses the same facts to generate additional facts about siblings:</p> <pre><code class="language-flix">def main(): Unit \ IO =
+    let got = #{
+        ParentOf("Tywin Lannister", "Cersei Lannister").
+        ParentOf("Tywin Lannister", "Jaime Lannister").
+        ParentOf("Cersei Lannister", "Joffrey Baratheon").
+        ParentOf("Cersei Lannister", "Myrcella Baratheon").
+
+        SiblingOf(x, y) :- ParentOf(p, x), ParentOf(p, y).
+    };
+    let siblings = query got select (x, y) from SiblingOf(x, y);
+    println(siblings)
+</code></pre> <p>The key line is:</p> <pre><code class="language-flix">SiblingOf(x, y) :- ParentOf(p, x), ParentOf(p, y).
+</code></pre> <p>Which you can read as “<code class="language-plaintext highlighter-rouge">x</code> is a sibling of <code class="language-plaintext highlighter-rouge">y</code> <strong>if</strong> we can find at least one person <code class="language-plaintext highlighter-rouge">p</code> where <code class="language-plaintext highlighter-rouge">p</code> is a parent of <code class="language-plaintext highlighter-rouge">x</code> <strong>and</strong> <code class="language-plaintext highlighter-rouge">p</code> is a parent of <code class="language-plaintext highlighter-rouge">y</code>”.</p> <p>And here’s what it outputs:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(Cersei Lannister, Cersei Lannister) :: (Cersei Lannister, Jaime Lannister) :: 
+(Jaime Lannister, Cersei Lannister) :: (Jaime Lannister, Jaime Lannister) :: 
+(Joffrey Baratheon, Joffrey Baratheon) :: (Joffrey Baratheon, Myrcella Baratheon) :: 
+(Myrcella Baratheon, Joffrey Baratheon) :: (Myrcella Baratheon, Myrcella Baratheon) ::
+Nil
+</code></pre></div></div> <p>Were you surprised that there were so many answers?</p> <p>The list is as long as it is because:</p> <ol> <li>If <code class="language-plaintext highlighter-rouge">SiblingOf(x, y)</code> is true, then so is <code class="language-plaintext highlighter-rouge">Sibling(y, x)</code> (i.e. if you are my sibling, then I am also your sibling).</li> <li>As we’ve written it, <code class="language-plaintext highlighter-rouge">Sibling</code> considers anyone with a parent to be their own sibling.</li> </ol> <p>The first point above is probably exactly what we want (i.e. we really do want the sibling relationship to be reflexive). But perhaps we don’t want people being their own siblings.</p> <p>Here’s a slightly modified version of our program which adds a <em>guard</em> to our rule, which eliminates cases where <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> represent the same person:</p> <pre><code class="language-flix">def main(): Unit \ IO =
+    let got = #{
+        ParentOf("Tywin Lannister", "Cersei Lannister").
+        ParentOf("Tywin Lannister", "Jaime Lannister").
+        ParentOf("Cersei Lannister", "Joffrey Baratheon").
+        ParentOf("Cersei Lannister", "Myrcella Baratheon").
+
+        SiblingOf(x, y) :- ParentOf(p, x), ParentOf(p, y), if x != y.
+    };
+    let siblings = query got select (x, y) from SiblingOf(x, y);
+    println(siblings)
+</code></pre> <p>And here’s what it outputs:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(Cersei Lannister, Jaime Lannister) :: (Jaime Lannister, Cersei Lannister) ::
+(Joffrey Baratheon, Myrcella Baratheon) :: (Myrcella Baratheon, Joffrey Baratheon) ::
+Nil
+</code></pre></div></div> <h2 id="conclusion">Conclusion</h2> <p>A Datalog program consists of <em>facts</em> and <em>rules</em>. Rules generate new facts from existing ones.</p> <p>In the <a href="http://paulbutcher.com/blog/2022/datalog2/">next part</a> of this series, we’ll dig deeper into the integration between Flix and Datalog.</p> <p>[Part 1 | <a href="http://paulbutcher.com/blog/2022/datalog2/">Part 2</a> | <a href="http://paulbutcher.com/blog/2022/datalog3/">Part 3</a> | <a href="http://paulbutcher.com/blog/2022/datalog4/">Part 4</a>]</p>]]></content><author><name></name></author><category term="flix"/><category term="flix"/><category term="datalog"/><category term="logic-programming"/><summary type="html"><![CDATA[This is part 1 of a series. [Part 1 | Part 2 | Part 3 | Part 4]]]></summary></entry></feed>

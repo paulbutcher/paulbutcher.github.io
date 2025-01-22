@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Paul Butcher</title>
+  <link href="https://paulbutcher.com/atom.xml" rel="self"/>
+  <link href="https://paulbutcher.com"/>
+  <updated>2025-01-22T15:58:26+00:00</updated>
+  <id>https://paulbutcher.com</id>
+  <author>
+    <name>Paul Butcher</name>
+  </author>
+  <entry>
+    <id>https://paulbutcher.com/test.html</id>
+    <link href="https://paulbutcher.com/test.html"/>
+    <title>test</title>
+    <updated>2025-01-22T23:59:59+00:00</updated>
+    <content type="html"><![CDATA[<p>Write a blog post here!</p>]]></content>
+  </entry>
+</feed>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>An introduction to Datalog in Flix: Part 2</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="application/atom+xml" rel="alternate" href="atom.xml" title="An introduction to Datalog in Flix: Part 2">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-clojure.min.js"></script>
+    <script type="text/javascript" src="https://livejs.com/live.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism.min.css">
+
+
+
+    <!-- Social sharing (Facebook, Twitter, LinkedIn, etc.) -->
+    <meta name="title" content="An introduction to Datalog in Flix: Part 2">
+    <meta name="twitter:title" content="An introduction to Datalog in Flix: Part 2">
+    <meta property="og:title" content="An introduction to Datalog in Flix: Part 2">
+    <meta property="og:type" content="website">
+
+
+    <meta name="twitter:url" content="https://paulbutcher.com/2022-10-23-datalog2.html">
+    <meta property="og:url" content="https://paulbutcher.com/2022-10-23-datalog2.html">
+
+
+    <meta name="twitter:card" content="summary">
+
+
+
+  </head>
+  <body>
+
+    <div class="site-header">
+      <div class="wrapper">
+        <div class="site-nav">
+          <a class="page-link" href="archive.html">Archive</a>
+          <a class="page-link" href="tags/index.html">Tags</a>
+          
+	  <a class="page-link" href="atom.xml">
+            Feed
+          </a>
+	  
+	  
+        </div>
+        <div>
+          <h1 class="site-title">
+            <a class="page-link" href="index.html">Paul Butcher</a>
+          </h1>
+	  <p></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper">
+
+      <h1>
+  
+  An introduction to Datalog in Flix: Part 2
+  
+</h1>
+<p>This is part 2 of a series. &#91;<a href='2022-10-22-datalog1.html'>Part 1</a> | Part 2 | <a href='2022-10-25-datalog3.html'>Part 3</a> | <a href='2022-10-26-datalog4.html'>Part 4</a>]</p><p>The code to accompany this series is available <a href='https://github.com/paulbutcher/datalog-flix'>here</a>.</p><h2 id="injecting_facts">Injecting facts</h2><p>In part 1 of this series, we used Datalog rules to infer new facts about characters in Game of Thrones.</p><p>But where do our initial facts come from? In part 1 we simply included them as part of our Datalog, but this isn't a scalable approach. We don't want to have to manually re-enter all the details of all of the characters in Game of Thrones!</p><p>What's more likely is that we'll read these facts from some external source; perhaps a database or a JSON file. This is where the power of Flix integration comes into play; we can use Flix, a powerful general purpose language, to read our data and get it into the right format. We then <em>inject</em> it into Datalog facts.</p><p>So instead of writing this (from part 1):</p><pre><code>def main&#40;&#41;: Unit \ IO =
+    let got = #{
+        ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Cersei Lannister&quot;&#41;.
+        ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Jaime Lannister&quot;&#41;.
+        ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Joffrey Baratheon&quot;&#41;.
+        ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Myrcella Baratheon&quot;&#41;.
+
+        SiblingOf&#40;x, y&#41; :- ParentOf&#40;p, x&#41;, ParentOf&#40;p, y&#41;, if x != y.
+    };
+    let siblings = query got select &#40;x, y&#41; from SiblingOf&#40;x, y&#41;;
+    println&#40;siblings&#41;
+</code></pre><p>We can instead write:</p><pre><code>def main&#40;&#41;: Unit \ IO =
+    let parentList = &#40;&quot;Tywin Lannister&quot;, &quot;Cersei Lannister&quot;&#41; ::
+        &#40;&quot;Tywin Lannister&quot;, &quot;Jaime Lannister&quot;&#41; ::
+        &#40;&quot;Cersei Lannister&quot;, &quot;Joffrey Baratheon&quot;&#41; ::
+        &#40;&quot;Cersei Lannister&quot;, &quot;Myrcella Baratheon&quot;&#41; :: Nil;
+
+    let parents = inject parentList into ParentOf;
+
+    let got = #{
+        SiblingOf&#40;x, y&#41; :- ParentOf&#40;p, x&#41;, ParentOf&#40;p, y&#41;, if x != y.
+    };
+
+    let siblings = query got, parents select &#40;x, y&#41; from SiblingOf&#40;x, y&#41;;
+
+    println&#40;siblings&#41;
+</code></pre><p>Or, more realistically, we read our data from some external file (in this case, Jeffrey Lancaster's amazingly detailed <a href='https://github.com/jeffreylancaster/game-of-thrones'>Game of Thrones dataset</a>):</p><pre><code>def main&#40;&#41;: Unit \ IO =
+
+    let parents = inject Json.getParents&#40;&#41; into ParentOf;
+
+    let got = #{
+        SiblingOf&#40;x, y&#41; :- ParentOf&#40;p, x&#41;, ParentOf&#40;p, y&#41;, if x != y.
+    };
+
+    let siblings = query got, parents select &#40;x, y&#41; from SiblingOf&#40;x, y&#41;;
+
+    println&#40;siblings&#41;
+</code></pre><p>Which gives us the following (truncated!) output:</p><pre><code>&#40;Aegon Targaryen, Jon Snow&#41; :: &#40;Aegon Targaryen, Rhaenys Targaryen&#41; ::
+&#40;Arya Stark, Bran Stark&#41; :: &#40;Arya Stark, Rickon Stark&#41; ::
+&#40;Arya Stark, Robb Stark&#41; :: &#40;Arya Stark, Sansa Stark&#41; ::
+&#40;Benjen Stark, Brandon Stark&#41; :: &#40;Benjen Stark, Eddard Stark&#41; :: ...
+</code></pre><h2 id="chaining_datalog">Chaining Datalog</h2><p>The ability to move data back and forth between Datalog and Flix makes it very easy to use Datalog as part of solving a larger problem. To illustrate this, let's consider working out whether Game of Thrones obeys the <a href='https://en.wikipedia.org/wiki/Six_degrees_of_separation'>"six degrees of separation"</a> rule (the idea that all people are six or fewer connections away from each other; you might have come across it from the "Six Degrees of Kevin Bacon" game, or a mathematician's Erdős number).</p><p>As well as parentage, the dataset we've been using includes all kinds of other relationships between characters such as alliances, marriages and engagements, who serves whom, who killed whom, etc. Taking all of these relationships together, how many degrees of separation does it take from a major character (say Tyrion) to cover the entire cast of characters?</p><p>(You can find the complete source <a href='https://github.com/paulbutcher/datalog-flix/tree/master/part2-3'>here</a>).</p><p>First, we extract our long list of relationships from our dataset:</p><pre><code>    let relationshipTypes = &quot;parents&quot; :: &quot;parentOf&quot; :: &quot;killed&quot; :: &quot;killedBy&quot; ::
+        &quot;serves&quot; :: &quot;servedBy&quot; :: &quot;guardianOf&quot; :: &quot;guardedBy&quot; :: &quot;siblings&quot; ::
+        &quot;marriedEngaged&quot; :: &quot;allies&quot; :: Nil;
+    let relationships = Json.getRelationships&#40;relationshipTypes&#41;;
+</code></pre><p>We then inject that list into Datalog as a series of <code>Related</code> facts, just like we've seen above:</p><pre><code>    let related = inject relationships into Related;
+</code></pre><p>So now we have a set of facts like <code>Related&#40;&quot;Tyrion Lannister&quot;, &quot;Shae&quot;&#41;</code> because Tyrion killed Shae, and <code>Related&#40;&quot;Arya Stark&quot;, &quot;Nymeria&quot;&#41;</code> because Arya is guarded by Nymeria, and so on.</p><p>Next, here is a Datalog rule which, given a set of characters we've already found, finds the characters with the next degree of separation:</p><pre><code>    let rules = #{
+        NextDegree&#40;x&#41; :- AlreadyFound&#40;y&#41;, Related&#40;y, x&#41;, not AlreadyFound&#40;x&#41;.
+    };
+</code></pre><p>So a character <code>x</code> is in the next degree of separation if there is at least one character <code>y</code> who we have already and where <code>y</code> is related to <code>x</code>. Finally we exclude characters that we've already found.</p><p>Here's a function which uses the above to repeatedly calculate degrees of separation until we've exhausted all our characters:</p><pre><code>    def degreesOfSeparation&#40;deg: Int32, cs: List&#91;String&#93;&#41;: Unit \ IO = {
+        let alreadyFound = inject cs into AlreadyFound;
+        let nextDegree = query rules, alreadyFound, related select &#40;x&#41; from NextDegree&#40;x&#41;;
+        match List.length&#40;nextDegree&#41; {
+            case count if count &gt; 0 =&gt;
+                println&#40;&quot;Separated by degree ${deg}: ${count}&quot;&#41;;
+                degreesOfSeparation&#40;deg + 1, cs ::: nextDegree&#41;
+            case &#95; =&gt;
+                println&#40;&quot;Nobody separated by degree ${deg}&quot;&#41;
+        }
+    };
+</code></pre><p>This function takes <code>deg</code> (a number representing the current degree of separation we're looking at) and <code>cs</code> a list of characters we've already found.</p><p>We start by creating our <code>AlreadyFound</code> facts from this list of characters, and then use the Datalog <code>rules</code> we defined above, along with our <code>AlreadyFound</code> and <code>Related</code> facts to generate <code>NextDegree</code> characters.</p><p><code>List.length&#40;nextDegree&#41;</code> returns the length of this list, and we use <code>match</code> to determine whether this number is greater than zero.</p><p>If it is, then we output the number of characters we just found, and recursively call <code>degreesOfSeparation</code> with <code>deg</code> increased by one, and a new set of characters which includes both our original root set and the characters we just found.</p><p>Finally, we kick the whole thing off by calling <code>degreesOfSeparation</code> with our initial root character, Tyrion:</p><pre><code>    degreesOfSeparation&#40;1, &quot;Tyrion Lannister&quot; :: Nil&#41;
+</code></pre><p>Here's what we get when we run it:</p><pre><code>Separated by degree 1: 6                                                        
+Separated by degree 2: 56
+Separated by degree 3: 104
+Separated by degree 4: 60
+Separated by degree 5: 14
+Separated by degree 6: 2
+Nobody separated by degree 7
+</code></pre><p>So yes, it does look like Game of Thrones does obey the six degrees of separation rule.</p><p>Here's the whole thing. I suggest trying to implement this in your favourite language to see just how easy the combination of Flix and Datalog makes this:</p><pre><code>def main&#40;&#41;: Unit \ IO =
+
+    let relationshipTypes = &quot;parents&quot; :: &quot;parentOf&quot; :: &quot;killed&quot; :: &quot;killedBy&quot; ::
+        &quot;serves&quot; :: &quot;servedBy&quot; :: &quot;guardianOf&quot; :: &quot;guardedBy&quot; :: &quot;siblings&quot; ::
+        &quot;marriedEngaged&quot; :: &quot;allies&quot; :: Nil;
+    let relationships = Json.getRelationships&#40;relationshipTypes&#41;;
+
+    let related = inject relationships into Related;
+    let rules = #{
+        NextDegree&#40;x&#41; :- AlreadyFound&#40;y&#41;, Related&#40;y, x&#41;, not AlreadyFound&#40;x&#41;.
+    };
+
+    def degreesOfSeparation&#40;deg: Int32, cs: List&#91;String&#93;&#41;: Unit \ IO = {
+        let alreadyFound = inject cs into AlreadyFound;
+        let nextDegree = query rules, alreadyFound, related select &#40;x&#41; from NextDegree&#40;x&#41;;
+        match List.length&#40;nextDegree&#41; {
+            case count if count &gt; 0 =&gt;
+                println&#40;&quot;Separated by degree ${deg}: ${count}&quot;&#41;;
+                degreesOfSeparation&#40;deg + 1, cs ::: nextDegree&#41;
+            case &#95; =&gt;
+                println&#40;&quot;Nobody separated by degree ${deg}&quot;&#41;
+        }
+    };
+
+    degreesOfSeparation&#40;1, &quot;Tyrion Lannister&quot; :: Nil&#41;
+</code></pre><h2 id="conclusion">Conclusion</h2><p>Flix allows us to seamlessly move data back and forth between Flix and Datalog by <code>inject</code>ing facts from Flix to Datalog and <code>query</code>ing data from Datalog to Flix. This allows us to use the strengths of a general purpose language like Flix for things it's good at (e.g. reading JSON files) and Datalog for things that it's good at (e.g. inferring new facts from existing ones).</p><p>In the next part of this series, we'll look at one of the most powerful aspects of Flix's implementation of Datalog: lattice semantics.</p><p>&#91;<a href='2022-10-22-datalog1.html'>Part 1</a> | Part 2 | <a href='2022-10-25-datalog3.html'>Part 3</a> | <a href='2022-10-26-datalog4.html'>Part 4</a>&#93;</p>
+
+<p><i>Published: 2022-10-23</i></p>
+
+<p>
+  <i>
+  Tagged:
+  
+  <span class="tag">
+    <a href="tags/flix.html">flix</a>
+  </span>
+  
+  <span class="tag">
+    <a href="tags/datalog.html">datalog</a>
+  </span>
+  
+  <span class="tag">
+    <a href="tags/logic-programming.html">logic-programming</a>
+  </span>
+  
+  </i>
+</p>
+
+
+
+      
+      <div style="margin-bottom: 20px; float: right;">
+        <a class="page-link" href="archive.html">Archive</a>
+      </div>
+      
+    </div>
+  </body>
+</html>

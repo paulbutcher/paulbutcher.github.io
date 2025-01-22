@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>An introduction to Datalog in Flix: Part 4</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="application/atom+xml" rel="alternate" href="atom.xml" title="An introduction to Datalog in Flix: Part 4">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-clojure.min.js"></script>
+    <script type="text/javascript" src="https://livejs.com/live.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism.min.css">
+
+
+
+    <!-- Social sharing (Facebook, Twitter, LinkedIn, etc.) -->
+    <meta name="title" content="An introduction to Datalog in Flix: Part 4">
+    <meta name="twitter:title" content="An introduction to Datalog in Flix: Part 4">
+    <meta property="og:title" content="An introduction to Datalog in Flix: Part 4">
+    <meta property="og:type" content="website">
+
+
+    <meta name="twitter:url" content="https://paulbutcher.com/2022-10-26-datalog4.html">
+    <meta property="og:url" content="https://paulbutcher.com/2022-10-26-datalog4.html">
+
+
+    <meta name="twitter:card" content="summary">
+
+
+
+  </head>
+  <body>
+
+    <div class="site-header">
+      <div class="wrapper">
+        <div class="site-nav">
+          <a class="page-link" href="archive.html">Archive</a>
+          <a class="page-link" href="tags/index.html">Tags</a>
+          
+	  <a class="page-link" href="atom.xml">
+            Feed
+          </a>
+	  
+	  
+        </div>
+        <div>
+          <h1 class="site-title">
+            <a class="page-link" href="index.html">Paul Butcher</a>
+          </h1>
+	  <p></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper">
+
+      <h1>
+  
+  An introduction to Datalog in Flix: Part 4
+  
+</h1>
+<p>This is part 4 of a series. &#91;<a href='2022-10-22-datalog1.html'>Part 1</a> | <a href='2022-10-23-datalog2.html'>Part 2</a> | <a href='2022-10-25-datalog3.html'>Part 3</a> | Part 4&#93;</p><p>The code to accompany this series is available <a href='https://github.com/paulbutcher/datalog-flix'>here</a>.</p><p>In the previous part of this series, we saw how to use lattice semantics to calculate all our degrees of separation within the Game of Thrones dataset in one pass. But we didn't quite get to our final solution because we weren't yet calculating counts of the number of characters at each degree.</p><p>In this part, we'll tie off that loose end, and discover why lattice semantics are "lattice" semantics in the process.</p><p>Of course, we could just count up our values in Flix (not Datalog) code, and that would be a perfectly reasonable approach. But as we'll see Datalog gives us a really elegant solution by leveraging <em>partial ordering</em>.</p><h2 id="partial_ordering">Partial Ordering</h2><p>So far we've been working with simple integers, and integers are (surprise!) <em>ordered</em>. So 1 is less than 2 and 3 is less than 126 and so on.</p><p>In fact, not only are integers ordered, they <em>totally</em> ordered. You can pick any pair of numbers <code>a</code> and <code>b</code>, and at least one of <code>a &lt;= b</code> or <code>b &lt;= a</code> will be true (they might both be true if <code>a</code> equals <code>b</code>).</p><p>But, not every set of values is totally ordered. A real world example of a partial ordering is ancestry; given two people a and b, it might easily be the case that <em>neither</em> "a is an ancestor of b" <em>nor</em> "b is an ancestor of a" is true.</p><p>For example, "Eddard Stark is an ancestor of Arya Stark" is true. But neither "Cersei Lannister is an ancestor of Tyrion Lannister" nor "Tyrion Lannister is an ancestor of Cersei Lannister" are true.</p><p>However, we can ask "who is the most recent common ancestor of Cersei and Tyrion" (in this case Tywin Lannister). We generally refer to this as the <em>least upper bound</em>.</p><h2 id="least_upper_bound">Least Upper Bound</h2><p>In part 3, we said that lattice semantics chose the "maximum" value from all possible values. This was a simplification: they actually chose the least upper bound.</p><p>For integers, which we were working with in part 3, the least upper bound <em>is</em> the maximum value. But for other types, those that are partially ordered (as we saw with ancestry above), the least upper bound could be something else.</p><p>An interesting example is sets. It may not be the case that either "set a is a subset of set b" or "set b is a subset of set a" is true. But they will always have a least upper bound which is the <em>union</em> of a and b.</p><p>For example, the least upper bound of <code>Set#{&quot;Tyrion Lannister&quot;, &quot;Cersei Lannister&quot;}</code> and <code>Set#{&quot;Tyrion Lannister&quot;, &quot;Arya Stark&quot;}</code> is <code>Set#{&quot;Tyrion Lannister&quot;, &quot;Cersei Lannister&quot;, &quot;Arya Stark&quot;}</code>.</p><blockquote><p> This is where the "lattice" in lattice semantics comes from: a partially ordered set which defines a least upper bound is called a <a href='https://en.wikipedia.org/wiki/Lattice_(order'><em>lattice</em></a>) in mathematics. </p></blockquote><p>Happily, this is exactly what we need to solve our degrees of separation problem.</p><h2 id="six_degrees_of_separation%2C_take_3">Six Degrees of Separation, Take 3</h2><p>As a reminder, here were the rules we used in part 3 of this series:</p><pre><code>        Degree&#40;x; Down&#40;0&#41;&#41; :- Root&#40;x&#41;.
+        Degree&#40;x; n + Down&#40;1&#41;&#41; :- Degree&#40;y; n&#41;, Related&#40;y, x&#41;.
+</code></pre><p>Here are the new rules we're going to add:</p><pre><code>        AggregatedDegree&#40;n; Set#{x}&#41; :- fix Degree&#40;x; n&#41;.
+        DegreeCount&#40;n, Set.size&#40;s&#41;&#41; :- fix AggregatedDegree&#40;n; s&#41;.
+</code></pre><p>We start by inferring new <code>AggregatedDegree</code> facts from the <code>Degree</code> facts we calculated previously. We're using the fact that the least upper bound of a collection of sets is the union of those sets, so the value on the right side of the semicolon will be the union of all of the character names in <code>Degree</code>.</p><blockquote><p> You might be wondering what the <code>fix</code> is for in our new rules? If you look at the two sides of the rule (either side of the <code>:-</code>) you can see that on the left we're using <code>n</code> as a normal value (it's on the left of the semicolon), whereas on the right it's a lattice value (it's on the right of the semicolon). Flix requires that we use <code>fix</code> if we ever mix a value this way; it ensures that we completely calculate all the <code>Degree</code> facts before starting to create <code>AggregateDegree</code> facts. </p></blockquote><p>So now we have a number of <code>AggregatedDegree</code> facts, one for each degree of separation, where the right hand side is a set of all the characters of that degree. The final step is to convert those facts into <code>DegreeCount</code> facts by finding the size of each set.</p><p>Here's the whole thing. As you can see, it's even more elegant than the solution we came up with in part 2 (which was already much simpler than we could have achieved without using Datalog).</p><pre><code>def main&#40;&#41;: Unit \ IO =
+
+    let relationshipTypes = &quot;parents&quot; :: &quot;parentOf&quot; :: &quot;killed&quot; :: &quot;killedBy&quot; ::
+        &quot;serves&quot; :: &quot;servedBy&quot; :: &quot;guardianOf&quot; :: &quot;guardedBy&quot; :: &quot;siblings&quot; ::
+        &quot;marriedEngaged&quot; :: &quot;allies&quot; :: Nil;
+    let relationships = Json.getRelationships&#40;relationshipTypes&#41;;
+
+    let related = inject relationships into Related;
+
+    let rules = #{
+        Degree&#40;x; Down&#40;0&#41;&#41; :- Root&#40;x&#41;.
+        Degree&#40;x; n + Down&#40;1&#41;&#41; :- Degree&#40;y; n&#41;, Related&#40;y, x&#41;.
+        AggregatedDegree&#40;n; Set#{x}&#41; :- fix Degree&#40;x; n&#41;.
+        DegreeCount&#40;n, Set.size&#40;s&#41;&#41; :- fix AggregatedDegree&#40;n; s&#41;.
+    };
+
+    let root = inject &quot;Tyrion Lannister&quot; :: Nil into Root;
+
+    query rules, related, root select &#40;d, c&#41; from DegreeCount&#40;d, c&#41; |&gt;
+        List.foreach&#40;match &#40;d, c&#41; -&gt; println&#40;&quot;Separated by degree ${d}: ${c}&quot;&#41;&#41;
+</code></pre><p>And, for completeness, here's what it outputs:</p><pre><code>Separated by degree 6: 2                                                        
+Separated by degree 5: 14
+Separated by degree 4: 60
+Separated by degree 3: 104
+Separated by degree 2: 56
+Separated by degree 1: 6
+Separated by degree 0: 1
+</code></pre><h2 id="conclusion">Conclusion</h2><p>That's it for our journey through Datalog and Flix. Please do experiment with other problems which can leverage Datalog: I'd love to see what you come up with!</p><p>&#91;<a href='2022-10-22-datalog1.html'>Part 1</a> | <a href='2022-10-23-datalog2.html'>Part 2</a> | <a href='2022-10-25-datalog3.html'>Part 3</a> | Part 4&#93;</p>
+
+<p><i>Published: 2022-10-26</i></p>
+
+<p>
+  <i>
+  Tagged:
+  
+  <span class="tag">
+    <a href="tags/flix.html">flix</a>
+  </span>
+  
+  <span class="tag">
+    <a href="tags/datalog.html">datalog</a>
+  </span>
+  
+  <span class="tag">
+    <a href="tags/logic-programming.html">logic-programming</a>
+  </span>
+  
+  </i>
+</p>
+
+
+
+      
+      <div style="margin-bottom: 20px; float: right;">
+        <a class="page-link" href="archive.html">Archive</a>
+      </div>
+      
+    </div>
+  </body>
+</html>

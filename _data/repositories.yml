@@ -1,9 +1,0 @@
-github_users:
-  - paulbutcher
-
-github_repos:
-  - flix/flix
-  - paulbutcher/datalog-flix
-  - paulbutcher/ScalaMock
-  - paulbutcher/electron-app
-  - paulbutcher/lein-lambda

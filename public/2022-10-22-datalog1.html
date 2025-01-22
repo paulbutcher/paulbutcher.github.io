@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>An introduction to Datalog in Flix: Part 1</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="application/atom+xml" rel="alternate" href="atom.xml" title="An introduction to Datalog in Flix: Part 1">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-clojure.min.js"></script>
+    <script type="text/javascript" src="https://livejs.com/live.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism.min.css">
+
+
+
+    <!-- Social sharing (Facebook, Twitter, LinkedIn, etc.) -->
+    <meta name="title" content="An introduction to Datalog in Flix: Part 1">
+    <meta name="twitter:title" content="An introduction to Datalog in Flix: Part 1">
+    <meta property="og:title" content="An introduction to Datalog in Flix: Part 1">
+    <meta property="og:type" content="website">
+
+
+    <meta name="twitter:url" content="https://paulbutcher.com/2022-10-22-datalog1.html">
+    <meta property="og:url" content="https://paulbutcher.com/2022-10-22-datalog1.html">
+
+
+    <meta name="twitter:card" content="summary">
+
+
+
+  </head>
+  <body>
+
+    <div class="site-header">
+      <div class="wrapper">
+        <div class="site-nav">
+          <a class="page-link" href="archive.html">Archive</a>
+          <a class="page-link" href="tags/index.html">Tags</a>
+          
+	  <a class="page-link" href="atom.xml">
+            Feed
+          </a>
+	  
+	  
+        </div>
+        <div>
+          <h1 class="site-title">
+            <a class="page-link" href="index.html">Paul Butcher</a>
+          </h1>
+	  <p></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper">
+
+      <h1>
+  
+  An introduction to Datalog in Flix: Part 1
+  
+</h1>
+<p>This is part 1 of a series. &#91;Part 1 | <a href='2022-10-23-datalog2.html'>Part 2</a> | <a href='2022-10-25-datalog3.html'>Part 3</a> | <a href='2022-10-26-datalog4.html'>Part 4</a>&#93;</p><p>The code to accompany this series is available <a href='https://github.com/paulbutcher/datalog-flix'>here</a>.</p><h2 id="flix">Flix</h2><p><a href='https://flix.dev'>Flix</a> is an exciting new programming language which provides the power of strongly typed functional programming with the accessibility of "programmer friendly" languages like Go, Rust, or Ruby.</p><p>This article isn't about Flix, though, it's about Datalog, and the reason why Flix plus Datalog creates something greater than the sum of its parts.</p><h2 id="logic_programming">Logic Programming</h2><p>Logic programming is one of the "big three" programming language paradigms:</p><p><strong>Imperative programming</strong>: Languages like C, C++, Java, JavaScript, Go, Kotlin, …</p><p><strong>Functional programming</strong>: Languages like Haskell, Clojure, Elixir, F#, …</p><p><strong>Logic programming</strong>: Prolog, Datalog, Answer-set Programming, Mercury, …</p><p>But ... if it's one of the three major programming paradigms, how come nobody uses it? Perhaps you created a couple of toy Prolog programs at college, but you've almost certainly not used it since then.</p><p>There are good reasons why logic programming hasn't caught on outside of a very few specialised areas, but that may be about to change. By including logic programming as a first-class element of the language, Flix allows us to seamlessly move between functional and logic programming, leveraging the strengths of both.</p><p>This is analogous to the way that C# embeds database queries directly in the language through LINQ (and of course, you don't use LINQ to implement every single method; instead you use C# for most of your code and drop into LINQ when it makes sense).</p><p>In this first article, we'll explore the basics of Datalog. And then in the rest of the series we'll see how the combination of Datalog and Flix brings huge expressive power.</p><h2 id="facts">Facts</h2><p>Datalog programs are built from two components: <em>facts</em> and <em>rules</em>. Here are some facts about Game of Thrones:</p><pre><code>GreatHouse&#40;&quot;Stark&quot;&#41;.
+GreatHouse&#40;&quot;Targaryen&quot;&#41;.
+
+ParentOf&#40;&quot;Rhaegar Targaryen&quot;, &quot;Jon Snow&quot;&#41;.
+ParentOf&#40;&quot;Aerys II Targaryen&quot;, &quot;Daenerys Targaryen&quot;&#41;.
+
+Coordinates&#40;&quot;Kings Landing&quot;, 6.697, 12.759&#41;.
+Coordinates&#40;&quot;Winterfell&quot;, 5.666, 6.218&#41;.
+</code></pre><p>You can read these facts as:</p><ul><li>Stark is one of the Great Houses.</li><li>Rhaegar Targaryen is a parent of Jon Snow.</li><li>Kings Landing is located at coordinates 6.697, 12.759.</li></ul><p>A fact can have any number of terms of (almost) any type.</p><h2 id="rules">Rules</h2><p>Rules create new facts by making logical inferences from existing facts. Imagine, for example, that we know the following facts:</p><pre><code>ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Cersei Lannister&quot;&#41;.
+ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Jaime Lannister&quot;&#41;.
+ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Joffrey Baratheon&quot;&#41;.
+ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Myrcella Baratheon&quot;&#41;.
+</code></pre><p>Then we can create additional facts about who is who's grandparent with the following rule:</p><pre><code>GrandparentOf&#40;x, y&#41; :- ParentOf&#40;x, c&#41;, ParentOf&#40;c, y&#41;.
+</code></pre><p>Which you can read as "<code>x</code> is a grandparent of <code>y</code> <strong>if</strong> we can find at least one person <code>c</code> where <code>x</code> is a parent of <code>c</code>, <strong>and</strong> <code>c</code> is a parent of <code>y</code>".</p><p>Here's a complete Flix program which does this:</p><pre><code>def main&#40;&#41;: Unit \ IO =
+    let got = #{
+        ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Cersei Lannister&quot;&#41;.
+        ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Jaime Lannister&quot;&#41;.
+        ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Joffrey Baratheon&quot;&#41;.
+        ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Myrcella Baratheon&quot;&#41;.
+
+        GrandparentOf&#40;x, y&#41; :- ParentOf&#40;x, c&#41;, ParentOf&#40;c, y&#41;.
+    };
+    let grandparents = query got select &#40;x, y&#41; from GrandparentOf&#40;x, y&#41;;
+    println&#40;grandparents&#41;
+</code></pre><p>The code within the <code>#{ ... }</code> block is our datalog, the rest of the code is the Flix program that it's embedded within. Our Datalog program is executed when we call <code>query</code> to extract the new <code>GrandparentOf</code> facts.</p><p>Here's what it outputs:</p><pre><code>&#40;Tywin Lannister, Joffrey Baratheon&#41; :: &#40;Tywin Lannister, Myrcella Baratheon&#41; :: Nil
+</code></pre><p>This is a list of 2-element tuples, with <code>::</code> indicating the list "cons" operator and <code>Nil</code> the end of the list. We can interpret these results as saying that Tywin Lannister is the grandparent of both Joffrey Baratheon and Myrcella Baratheon.</p><p>Here's a slightly different program which uses the same facts to generate additional facts about siblings:</p><pre><code>def main&#40;&#41;: Unit \ IO =
+    let got = #{
+        ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Cersei Lannister&quot;&#41;.
+        ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Jaime Lannister&quot;&#41;.
+        ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Joffrey Baratheon&quot;&#41;.
+        ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Myrcella Baratheon&quot;&#41;.
+
+        SiblingOf&#40;x, y&#41; :- ParentOf&#40;p, x&#41;, ParentOf&#40;p, y&#41;.
+    };
+    let siblings = query got select &#40;x, y&#41; from SiblingOf&#40;x, y&#41;;
+    println&#40;siblings&#41;
+</code></pre><p>The key line is:</p><pre><code>SiblingOf&#40;x, y&#41; :- ParentOf&#40;p, x&#41;, ParentOf&#40;p, y&#41;.
+</code></pre><p>Which you can read as "<code>x</code> is a sibling of <code>y</code> <strong>if</strong> we can find at least one person <code>p</code> where <code>p</code> is a parent of <code>x</code> <strong>and</strong> <code>p</code> is a parent of <code>y</code>".</p><p>And here's what it outputs:</p><pre><code>&#40;Cersei Lannister, Cersei Lannister&#41; :: &#40;Cersei Lannister, Jaime Lannister&#41; :: 
+&#40;Jaime Lannister, Cersei Lannister&#41; :: &#40;Jaime Lannister, Jaime Lannister&#41; :: 
+&#40;Joffrey Baratheon, Joffrey Baratheon&#41; :: &#40;Joffrey Baratheon, Myrcella Baratheon&#41; :: 
+&#40;Myrcella Baratheon, Joffrey Baratheon&#41; :: &#40;Myrcella Baratheon, Myrcella Baratheon&#41; ::
+Nil
+</code></pre><p>Were you surprised that there were so many answers?</p><p>The list is as long as it is because:</p><ol><li>If <code>SiblingOf&#40;x, y&#41;</code> is true, then so is <code>Sibling&#40;y, x&#41;</code> (i.e. if you are my sibling, then I am also your sibling).</li><li>As we've written it, <code>Sibling</code> considers anyone with a parent to be their own sibling.</li></ol><p>The first point above is probably exactly what we want (i.e. we really do want the sibling relationship to be reflexive). But perhaps we don't want people being their own siblings.</p><p>Here's a slightly modified version of our program which adds a <em>guard</em> to our rule, which eliminates cases where <code>x</code> and <code>y</code> represent the same person:</p><pre><code>def main&#40;&#41;: Unit \ IO =
+    let got = #{
+        ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Cersei Lannister&quot;&#41;.
+        ParentOf&#40;&quot;Tywin Lannister&quot;, &quot;Jaime Lannister&quot;&#41;.
+        ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Joffrey Baratheon&quot;&#41;.
+        ParentOf&#40;&quot;Cersei Lannister&quot;, &quot;Myrcella Baratheon&quot;&#41;.
+
+        SiblingOf&#40;x, y&#41; :- ParentOf&#40;p, x&#41;, ParentOf&#40;p, y&#41;, if x != y.
+    };
+    let siblings = query got select &#40;x, y&#41; from SiblingOf&#40;x, y&#41;;
+    println&#40;siblings&#41;
+</code></pre><p>And here's what it outputs:</p><pre><code>&#40;Cersei Lannister, Jaime Lannister&#41; :: &#40;Jaime Lannister, Cersei Lannister&#41; ::
+&#40;Joffrey Baratheon, Myrcella Baratheon&#41; :: &#40;Myrcella Baratheon, Joffrey Baratheon&#41; ::
+Nil
+</code></pre><h2 id="conclusion">Conclusion</h2><p>A Datalog program consists of <em>facts</em> and <em>rules</em>. Rules generate new facts from existing ones.</p><p>In the <a href='2022-10-23-datalog2.html'>next part</a> of this series, we'll dig deeper into the integration between Flix and Datalog.</p><p>&#91;Part 1 | <a href='2022-10-23-datalog2.html'>Part 2</a> | <a href='2022-10-25-datalog3.html'>Part 3</a> | <a href='2022-10-26-datalog4.html'>Part 4</a>&#93;</p>
+
+<p><i>Published: 2022-10-22</i></p>
+
+<p>
+  <i>
+  Tagged:
+  
+  <span class="tag">
+    <a href="tags/flix.html">flix</a>
+  </span>
+  
+  <span class="tag">
+    <a href="tags/datalog.html">datalog</a>
+  </span>
+  
+  <span class="tag">
+    <a href="tags/logic-programming.html">logic-programming</a>
+  </span>
+  
+  </i>
+</p>
+
+
+
+      
+      <div style="margin-bottom: 20px; float: right;">
+        <a class="page-link" href="archive.html">Archive</a>
+      </div>
+      
+    </div>
+  </body>
+</html>

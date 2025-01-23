@@ -42,13 +42,13 @@ Happily, this is exactly what we need to solve our degrees of separation problem
 
 As a reminder, here were the rules we used in part 3 of this series:
 
-```
+```flix
         Degree(x; Down(0)) :- Root(x).
         Degree(x; n + Down(1)) :- Degree(y; n), Related(y, x).
 ```
 Here are the new rules we're going to add:
 
-```
+```flix
         AggregatedDegree(n; Set#{x}) :- fix Degree(x; n).
         DegreeCount(n, Set.size(s)) :- fix AggregatedDegree(n; s).
 ```
@@ -60,7 +60,7 @@ So now we have a number of `AggregatedDegree` facts, one for each degree of sepa
 
 Here's the whole thing. As you can see, it's even more elegant than the solution we came up with in part 2 (which was already much simpler than we could have achieved without using Datalog).
 
-```
+```flix
 def main(): Unit \ IO =
 
     let relationshipTypes = "parents" :: "parentOf" :: "killed" :: "killedBy" ::
@@ -84,7 +84,7 @@ def main(): Unit \ IO =
 ```
 And, for completeness, here's what it outputs:
 
-```
+```flix
 Separated by degree 6: 2
 Separated by degree 5: 14
 Separated by degree 4: 60

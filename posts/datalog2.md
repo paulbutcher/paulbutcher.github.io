@@ -2,7 +2,7 @@ Title: An introduction to Datalog in Flix: Part 2
 Date: 2022-10-23
 Tags: flix, datalog, logic-programming
 
-This is part 2 of a series. \[[Part 1](datalog1.html) | Part 2 | [Part 3](datalog3.html) | [Part 4](2022-10-26-datalog4.html)]
+This is part 2 of a series. \[[Part 1](datalog1.html) | Part 2 | [Part 3](datalog3.html) | [Part 4](datalog4.html)]
 
 The code to accompany this series is available [here](https://github.com/paulbutcher/datalog-flix).
 
@@ -16,7 +16,7 @@ What's more likely is that we'll read these facts from some external source; per
 
 So instead of writing this (from part 1):
 
-```
+```flix
 def main(): Unit \ IO =
     let got = #{
         ParentOf("Tywin Lannister", "Cersei Lannister").
@@ -31,7 +31,7 @@ def main(): Unit \ IO =
 ```
 We can instead write:
 
-```
+```flix
 def main(): Unit \ IO =
     let parentList = ("Tywin Lannister", "Cersei Lannister") ::
         ("Tywin Lannister", "Jaime Lannister") ::
@@ -50,7 +50,7 @@ def main(): Unit \ IO =
 ```
 Or, more realistically, we read our data from some external file (in this case, Jeffrey Lancaster's amazingly detailed [Game of Thrones dataset](https://github.com/jeffreylancaster/game-of-thrones)):
 
-```
+```flix
 def main(): Unit \ IO =
 
     let parents = inject Json.getParents() into ParentOf;
@@ -65,7 +65,7 @@ def main(): Unit \ IO =
 ```
 Which gives us the following (truncated!) output:
 
-```
+```flix
 (Aegon Targaryen, Jon Snow) :: (Aegon Targaryen, Rhaenys Targaryen) ::
 (Arya Stark, Bran Stark) :: (Arya Stark, Rickon Stark) ::
 (Arya Stark, Robb Stark) :: (Arya Stark, Sansa Stark) ::
@@ -81,7 +81,7 @@ As well as parentage, the dataset we've been using includes all kinds of other r
 
 First, we extract our long list of relationships from our dataset:
 
-```
+```flix
     let relationshipTypes = "parents" :: "parentOf" :: "killed" :: "killedBy" ::
         "serves" :: "servedBy" :: "guardianOf" :: "guardedBy" :: "siblings" ::
         "marriedEngaged" :: "allies" :: Nil;
@@ -89,14 +89,14 @@ First, we extract our long list of relationships from our dataset:
 ```
 We then inject that list into Datalog as a series of `Related` facts, just like we've seen above:
 
-```
+```flix
     let related = inject relationships into Related;
 ```
 So now we have a set of facts like `Related("Tyrion Lannister", "Shae")` because Tyrion killed Shae, and `Related("Arya Stark", "Nymeria")` because Arya is guarded by Nymeria, and so on.
 
 Next, here is a Datalog rule which, given a set of characters we've already found, finds the characters with the next degree of separation:
 
-```
+```flix
     let rules = #{
         NextDegree(x) :- AlreadyFound(y), Related(y, x), not AlreadyFound(x).
     };
@@ -105,7 +105,7 @@ So a character `x` is in the next degree of separation if there is at least one 
 
 Here's a function which uses the above to repeatedly calculate degrees of separation until we've exhausted all our characters:
 
-```
+```flix
     def degreesOfSeparation(deg: Int32, cs: List[String]): Unit \ IO = {
         let alreadyFound = inject cs into AlreadyFound;
         let nextDegree = query rules, alreadyFound, related select (x) from NextDegree(x);
@@ -128,12 +128,12 @@ If it is, then we output the number of characters we just found, and recursively
 
 Finally, we kick the whole thing off by calling `degreesOfSeparation` with our initial root character, Tyrion:
 
-```
+```flix
     degreesOfSeparation(1, "Tyrion Lannister" :: Nil)
 ```
 Here's what we get when we run it:
 
-```
+```flix
 Separated by degree 1: 6
 Separated by degree 2: 56
 Separated by degree 3: 104
@@ -147,7 +147,7 @@ So yes, it does look like Game of Thrones does obey the six degrees of separatio
 
 Here's the whole thing. I suggest trying to implement this in your favourite language to see just how easy the combination of Flix and Datalog makes this:
 
-```
+```flix
 def main(): Unit \ IO =
 
     let relationshipTypes = "parents" :: "parentOf" :: "killed" :: "killedBy" ::
@@ -180,4 +180,4 @@ Flix allows us to seamlessly move data back and forth between Flix and Datalog b
 
 In the next part of this series, we'll look at one of the most powerful aspects of Flix's implementation of Datalog: lattice semantics.
 
-\[[Part 1](datalog1.html) | Part 2 | [Part 3](datalog3.html) | [Part 4](2022-10-26-datalog4.html)\]
+\[[Part 1](datalog1.html) | Part 2 | [Part 3](datalog3.html) | [Part 4](datalog4.html)\]

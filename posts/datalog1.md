@@ -56,7 +56,7 @@ A fact can have any number of terms of (almost) any type.
 
 Rules create new facts by making logical inferences from existing facts. Imagine, for example, that we know the following facts:
 
-```
+```flix
 ParentOf("Tywin Lannister", "Cersei Lannister").
 ParentOf("Tywin Lannister", "Jaime Lannister").
 ParentOf("Cersei Lannister", "Joffrey Baratheon").
@@ -64,14 +64,14 @@ ParentOf("Cersei Lannister", "Myrcella Baratheon").
 ```
 Then we can create additional facts about who is who's grandparent with the following rule:
 
-```
+```flix
 GrandparentOf(x, y) :- ParentOf(x, c), ParentOf(c, y).
 ```
 Which you can read as "`x` is a grandparent of `y` **if** we can find at least one person `c` where `x` is a parent of `c`, **and** `c` is a parent of `y`".
 
 Here's a complete Flix program which does this:
 
-```
+```flix
 def main(): Unit \ IO =
     let got = #{
         ParentOf("Tywin Lannister", "Cersei Lannister").
@@ -88,7 +88,7 @@ The code within the `#{ ... }` block is our datalog, the rest of the code is the
 
 Here's what it outputs:
 
-```
+```flix
 (Tywin Lannister, Joffrey Baratheon) :: (Tywin Lannister, Myrcella Baratheon) :: Nil
 ```
 
@@ -96,7 +96,7 @@ This is a list of 2-element tuples, with `::` indicating the list "cons" operato
 
 Here's a slightly different program which uses the same facts to generate additional facts about siblings:
 
-```
+```flix
 def main(): Unit \ IO =
     let got = #{
         ParentOf("Tywin Lannister", "Cersei Lannister").
@@ -111,7 +111,7 @@ def main(): Unit \ IO =
 ```
 The key line is:
 
-```
+```flix
 SiblingOf(x, y) :- ParentOf(p, x), ParentOf(p, y).
 ```
 Which you can read as "`x` is a sibling of `y` **if** we can find at least one person `p` where `p` is a parent of `x` **and** `p` is a parent of `y`".
@@ -119,7 +119,7 @@ Which you can read as "`x` is a sibling of `y` **if** we can find at least one p
 
 And here's what it outputs:
 
-```
+```flix
 (Cersei Lannister, Cersei Lannister) :: (Cersei Lannister, Jaime Lannister) ::
 (Jaime Lannister, Cersei Lannister) :: (Jaime Lannister, Jaime Lannister) ::
 (Joffrey Baratheon, Joffrey Baratheon) :: (Joffrey Baratheon, Myrcella Baratheon) ::
@@ -138,7 +138,7 @@ The first point above is probably exactly what we want (i.e. we really do want t
 
 Here's a slightly modified version of our program which adds a *guard* to our rule, which eliminates cases where `x` and `y` represent the same person:
 
-```
+```flix
 def main(): Unit \ IO =
     let got = #{
         ParentOf("Tywin Lannister", "Cersei Lannister").
@@ -153,7 +153,7 @@ def main(): Unit \ IO =
 ```
 And here's what it outputs:
 
-```
+```flix
 (Cersei Lannister, Jaime Lannister) :: (Jaime Lannister, Cersei Lannister) ::
 (Joffrey Baratheon, Myrcella Baratheon) :: (Myrcella Baratheon, Joffrey Baratheon) ::
 Nil
@@ -165,4 +165,4 @@ A Datalog program consists of *facts* and *rules*. Rules generate new facts from
 
 In the [next part](datalog2.html) of this series, we'll dig deeper into the integration between Flix and Datalog.
 
-\[Part 1 | [Part 2](datalog2.html) | [Part 3](datalog3.html) | [Part 4](2022-10-26-datalog4.html)\]
+\[Part 1 | [Part 2](datalog2.html) | [Part 3](datalog3.html) | [Part 4](datalog4.html)\]

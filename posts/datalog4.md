@@ -2,7 +2,7 @@ Title: An introduction to Datalog in Flix: Part 4
 Date: 2022-10-26
 Tags: flix, datalog, logic-programming
 
-This is part 4 of a series. \[[Part 1](2022-10-22-datalog1.html) | [Part 2](2022-10-23-datalog2.html) | [Part 3](2022-10-25-datalog3.html) | Part 4\]
+This is part 4 of a series. \[[Part 1](datalog1.html) | [Part 2](datalog2.html) | [Part 3](datalog3.html) | Part 4\]
 
 The code to accompany this series is available [here](https://github.com/paulbutcher/datalog-flix).
 
@@ -85,7 +85,7 @@ def main(): Unit \ IO =
 And, for completeness, here's what it outputs:
 
 ```
-Separated by degree 6: 2                                                        
+Separated by degree 6: 2
 Separated by degree 5: 14
 Separated by degree 4: 60
 Separated by degree 3: 104
@@ -98,4 +98,4 @@ Separated by degree 0: 1
 
 That's it for our journey through Datalog and Flix. Please do experiment with other problems which can leverage Datalog: I'd love to see what you come up with!
 
-\[[Part 1](2022-10-22-datalog1.html) | [Part 2](2022-10-23-datalog2.html) | [Part 3](2022-10-25-datalog3.html) | Part 4\]
+\[[Part 1](datalog1.html) | [Part 2](datalog2.html) | [Part 3](datalog3.html) | Part 4\]

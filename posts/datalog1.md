@@ -2,7 +2,7 @@ Title: An introduction to Datalog in Flix: Part 1
 Date: 2022-10-22
 Tags: flix, datalog, logic-programming
 
-This is part 1 of a series. \[Part 1 | [Part 2](2022-10-23-datalog2.html) | [Part 3](2022-10-25-datalog3.html) | [Part 4](2022-10-26-datalog4.html)\]
+This is part 1 of a series. \[Part 1 | [Part 2](datalog2.html) | [Part 3](datalog3.html) | [Part 4](datalog4.html)\]
 
 The code to accompany this series is available [here](https://github.com/paulbutcher/datalog-flix).
 
@@ -12,7 +12,7 @@ The code to accompany this series is available [here](https://github.com/paulbut
 
 This article isn't about Flix, though, it's about Datalog, and the reason why Flix plus Datalog creates something greater than the sum of its parts.
 
-## Logic Programming 
+## Logic Programming
 
 Logic programming is one of the "big three" programming language paradigms:
 
@@ -34,7 +34,7 @@ In this first article, we'll explore the basics of Datalog. And then in the rest
 
 Datalog programs are built from two components: *facts* and *rules*. Here are some facts about Game of Thrones:
 
-```
+```flix
 GreatHouse("Stark").
 GreatHouse("Targaryen").
 
@@ -120,9 +120,9 @@ Which you can read as "`x` is a sibling of `y` **if** we can find at least one p
 And here's what it outputs:
 
 ```
-(Cersei Lannister, Cersei Lannister) :: (Cersei Lannister, Jaime Lannister) :: 
-(Jaime Lannister, Cersei Lannister) :: (Jaime Lannister, Jaime Lannister) :: 
-(Joffrey Baratheon, Joffrey Baratheon) :: (Joffrey Baratheon, Myrcella Baratheon) :: 
+(Cersei Lannister, Cersei Lannister) :: (Cersei Lannister, Jaime Lannister) ::
+(Jaime Lannister, Cersei Lannister) :: (Jaime Lannister, Jaime Lannister) ::
+(Joffrey Baratheon, Joffrey Baratheon) :: (Joffrey Baratheon, Myrcella Baratheon) ::
 (Myrcella Baratheon, Joffrey Baratheon) :: (Myrcella Baratheon, Myrcella Baratheon) ::
 Nil
 ```
@@ -163,6 +163,6 @@ Nil
 
 A Datalog program consists of *facts* and *rules*. Rules generate new facts from existing ones.
 
-In the [next part](2022-10-23-datalog2.html) of this series, we'll dig deeper into the integration between Flix and Datalog.
+In the [next part](datalog2.html) of this series, we'll dig deeper into the integration between Flix and Datalog.
 
-\[Part 1 | [Part 2](2022-10-23-datalog2.html) | [Part 3](2022-10-25-datalog3.html) | [Part 4](2022-10-26-datalog4.html)\]
+\[Part 1 | [Part 2](datalog2.html) | [Part 3](datalog3.html) | [Part 4](2022-10-26-datalog4.html)\]

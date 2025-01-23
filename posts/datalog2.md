@@ -2,7 +2,7 @@ Title: An introduction to Datalog in Flix: Part 2
 Date: 2022-10-23
 Tags: flix, datalog, logic-programming
 
-This is part 2 of a series. \[[Part 1](2022-10-22-datalog1.html) | Part 2 | [Part 3](2022-10-25-datalog3.html) | [Part 4](2022-10-26-datalog4.html)]
+This is part 2 of a series. \[[Part 1](datalog1.html) | Part 2 | [Part 3](datalog3.html) | [Part 4](2022-10-26-datalog4.html)]
 
 The code to accompany this series is available [here](https://github.com/paulbutcher/datalog-flix).
 
@@ -134,7 +134,7 @@ Finally, we kick the whole thing off by calling `degreesOfSeparation` with our i
 Here's what we get when we run it:
 
 ```
-Separated by degree 1: 6                                                        
+Separated by degree 1: 6
 Separated by degree 2: 56
 Separated by degree 3: 104
 Separated by degree 4: 60
@@ -180,4 +180,4 @@ Flix allows us to seamlessly move data back and forth between Flix and Datalog b
 
 In the next part of this series, we'll look at one of the most powerful aspects of Flix's implementation of Datalog: lattice semantics.
 
-\[[Part 1](2022-10-22-datalog1.html) | Part 2 | [Part 3](2022-10-25-datalog3.html) | [Part 4](2022-10-26-datalog4.html)\]
+\[[Part 1](datalog1.html) | Part 2 | [Part 3](datalog3.html) | [Part 4](2022-10-26-datalog4.html)\]

@@ -2,7 +2,7 @@ Title: An introduction to Datalog in Flix: Part 3
 Date: 2022-10-25
 Tags: flix, datalog, logic-programming
 
-This is part 3 of a series. \[[Part 1](2022-10-22-datalog1.html) | [Part 2](2022-10-23-datalog2.html) | Part 3 | [Part 4](2022-10-26-datalog4.html)]
+This is part 3 of a series. \[[Part 1](datalog1.html) | [Part 2](datalog2.html) | Part 3 | [Part 4](2022-10-26-datalog4.html)]
 
 The code to accompany this series is available [here](https://github.com/paulbutcher/datalog-flix).
 
@@ -44,8 +44,8 @@ def foo(): List[(String, Int32)] =
 All we've done is replace the commas (`,`) in our original `Foo` rules with semicolons (`;`). What it now returns is:
 
 ```
-(x, 5) :: (y, 3) :: Nil  
-``` 
+(x, 5) :: (y, 3) :: Nil
+```
 
 Switching to semicolons instructs Datalog to aggregate all the facts that have the same values on the left of the semicolon into a single fact, where the value on the right is the "maximum" of all the facts that are being combined. In our example above, the maximum value is 5 when the LHS is "x", and 3 when it's "y".
 
@@ -58,12 +58,12 @@ It seems like a small change, but it's a small change that dramatically increase
 Finding maximum values is great, but what if we want to find minimums instead? Flix allows us to reverse the sorting order of any type by using `Down`, so `Down[Int32]` sorts in the opposite order to `Int32`:
 
 ```
-flix> 1 < 3                                                                    
-true                                                                            
+flix> 1 < 3
+true
 flix> 4 < 2
-false                                                                           
+false
 flix> Down(1) < Down(3)
-false                                                                           
+false
 flix> Down(3) < Down(2)
 true
 ```
@@ -83,13 +83,13 @@ def bar(): List[(String, Down[Int32])] =
 Which returns:
 
 ```
-(x, 1) :: (y, 2) :: Nil 
+(x, 1) :: (y, 2) :: Nil
 ```
 So much for theory, let's see how this helps us solve a real problem.
 
 ## Six Degrees of Separation, Take 2
 
-In [part 2](2022-10-23-datalog2.html) of this series, we used Datalog to calculate degrees of separation between characters in Game of Thrones. The combination of logic programming and functional programming gave us a very simple solution. Now, we're going to use lattice semantics to make it even better.
+In [part 2](datalog2.html) of this series, we used Datalog to calculate degrees of separation between characters in Game of Thrones. The combination of logic programming and functional programming gave us a very simple solution. Now, we're going to use lattice semantics to make it even better.
 
 As a refresher, here's the code from part 2 which creates our `Related` facts:
 
@@ -116,7 +116,7 @@ And here is code which uses lattice semantics to calculate the degree of separat
 Before we go through this to see how it works, here's the (truncated) output:
 
 ```
-(Aegon Targaryen, 3) :: (Aeron Greyjoy, 3) :: (Aerys II Targaryen, 2) :: 
+(Aegon Targaryen, 3) :: (Aeron Greyjoy, 3) :: (Aerys II Targaryen, 2) ::
 (Akho, 3) :: (Alliser Thorne, 3) :: (Alton Lannister, 2) :: ...
 ```
 To see how this works, imagine what would happen if we wrote the above *without* lattice semantics:
@@ -144,4 +144,4 @@ But, with lattice semantics (and given that we're using `Down` to reverse the or
 
 So we're almost there: we now have a list of every character along with their minimum degree of separation from Tyrion. But if we're going to duplicate what we created in part 2, we need to go further and count how many characters there are at each degree of separation. We'll see how to do that in the [next part](2022-10-26-datalog4.html) of this series.
 
-\[[Part 1](2022-10-22-datalog1.html) | [Part 2](2022-10-23-datalog2.html) | Part 3 | [Part 4](2022-10-26-datalog4.html)\]
+\[[Part 1](datalog1.html) | [Part 2](datalog2.html) | Part 3 | [Part 4](2022-10-26-datalog4.html)\]

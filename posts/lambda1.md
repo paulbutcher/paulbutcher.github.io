@@ -134,7 +134,7 @@ Outputs:
 * [`SnapStart`](https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html) takes a snapshot of our function which reduces cold-start times to less than a second.
 * `Tracing` enables AWS X-Ray tracing.
 
-To deploy, first build the jar file with `clojure -T:build uberjar` (see [`build.clj` in GitHub](https://github.com/paulbutcher/example-lambda-app/blob/main/build.clj)), then deploy with `sam deploy --guided`. This will ask you some questions such as which region you want to deploy to and then eventually output the URL of your function's endpoint. Connect to that URL, and you should see exactly what you saw when you ran locally.
+To deploy, first build the jar file with `clojure -T:build uber` (see [`build.clj` in GitHub](https://github.com/paulbutcher/example-lambda-app/blob/main/build.clj)), then deploy with `sam deploy --guided`. This will ask you some questions such as which region you want to deploy to and then eventually output the URL of your function's endpoint. Connect to that URL, and you should see exactly what you saw when you ran locally.
 
 ## Monitoring
 

@@ -1,7 +1,6 @@
 Title: Quick and Easy Clojure on AWS Lambda in 2025
 Date: 2025-01-23
 Tags: clojure
-Preview: true
 
 I recently found myself starting a new project and was looking for the quickest and easiest way to get something up and running. In the past I might have used [Heroku](https://www.heroku.com), and I looked briefly at [Fly.io](https://fly.io), but it turns out that Clojure now runs much better on Lambda than it used to (cold starts are no longer an issue), and it's easy to get up and running with [AWS SAM](https://aws.amazon.com/serverless/sam/) which gives us simple serverless Infrastructure as Code.
 
@@ -146,6 +145,10 @@ There are a number of different ways to keep an eye on how your Lambda function 
 * You can watch logs locally in real time with `sam logs --tail`.
   * You'll need to specify the region and stack name you already specified when deploying. You can avoid having to do so every time by adding a `[default.global.parameters]` section to your `samconfig.toml` file.
 * From the AWS console, you can see logs in CloudWatch. Most interestingly, you can use X-Ray traces to see detailed timing information for each request.
+
+## Development
+
+Local development works just like any other Ring app. To deploy a new version, just build a new jar file and run `sam deploy`.
 
 ## Conclusion
 

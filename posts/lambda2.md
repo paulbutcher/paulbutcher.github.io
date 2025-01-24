@@ -69,8 +69,6 @@ We put our Lambda function in the VPC we've created by adding the following to i
       Policies: [AWSLambdaVPCAccessExecutionRole]
 ```
 
-We communicate these subnets to RDS via a subnet group:
-
 ### Database
 
 We now have everything we need to create a database instance:

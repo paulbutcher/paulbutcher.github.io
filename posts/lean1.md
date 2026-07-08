@@ -194,7 +194,7 @@ Sure, we can add more tests, but we have to stop somewhere. As the ISTQB [says](
 
 ## Proving `partitionWhen` correct
 
-Here's a theorem which will be true of any correct implementation of `partitionWhen`:
+Here's a theorem which, if we can find a way to prove it, will be true of any correct implementation of `partitionWhen`:
 
 ```lean
 theorem partitionWhen_flatten {α : Type _} (p : α → Bool) :

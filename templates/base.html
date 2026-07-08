@@ -11,14 +11,40 @@
             title="{{title}}"
         />
         <link rel="stylesheet" href="{{relative-path | safe}}style.css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-clojure.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-yaml.min.js"></script>
         {{watch | safe }}
         <link
             rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism.min.css"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
         />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/clojure.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/elixir.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/haskell.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/fsharp.min.js"></script>
+        <script
+            type="text/javascript"
+            src="https://unpkg.com/highlightjs-lean/dist/lean.min.js"
+        ></script>
+        <script>
+            hljs.highlightAll();
+
+            document.addEventListener("click", function (e) {
+                var btn = e.target.closest(".code-tabs__btn");
+                if (!btn) return;
+                var tabs = btn.closest(".code-tabs");
+                tabs.querySelectorAll(".code-tabs__btn").forEach(function (b) {
+                    b.classList.toggle("is-active", b === btn);
+                });
+                tabs
+                    .querySelectorAll(".code-tabs__panel")
+                    .forEach(function (p) {
+                        p.classList.toggle(
+                            "is-active",
+                            p.dataset.lang === btn.dataset.lang,
+                        );
+                    });
+            });
+        </script>
 
         {% if favicon-tags %}{{favicon-tags | safe}}{% endif %}
 

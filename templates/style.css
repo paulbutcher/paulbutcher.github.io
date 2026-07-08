@@ -82,3 +82,46 @@ ul.index {
 code {
     white-space: pre;
 }
+
+.code-tabs {
+    margin: 1em 0;
+}
+
+.code-tabs__nav {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.code-tabs__btn {
+    padding: 6px 14px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font: inherit;
+    color: rgb(51, 65, 85);
+    border-bottom: 2px solid transparent;
+    opacity: 0.6;
+}
+
+.code-tabs__btn:hover {
+    opacity: 1;
+}
+
+.code-tabs__btn.is-active {
+    opacity: 1;
+    border-bottom-color: rgb(51, 65, 85);
+    font-weight: 700;
+}
+
+.code-tabs__panel {
+    display: none;
+}
+
+.code-tabs__panel.is-active {
+    display: block;
+}
+
+.code-tabs__panel pre {
+    margin: 0;
+}

@@ -321,6 +321,8 @@ Lean is a full featured programming language capable of doing anything you can d
 
 What might stop you from using Lean in production is that all the focus has been on maths. [Mathlib](https://mathlib-initiative.org), the repository of reusable mathematical proofs is large and growing quickly; many of the things a working mathematician would expect to find are already there. The same is not true from the point of general software engineering. [Reservoir](https://reservoir.lean-lang.org), the repository of Lean packages, isn't especially well populated and a software engineer hoping to find a pre-built package which addresses their use case is likely to be disapointed. Although there are some gems in there (a [formally verified regular expression engine](https://github.com/pandaman64/lean-regex) and a [zlib implementation](https://github.com/kim-em/lean-zip), for example).
 
+Also, as is obvious from this small example, each line of production code requires several lines of proof (perhaps a ratio of 1:10 or 1:20), which has cost implications (tokens at the very least).
+
 But the benefit of knowing (not guessing, not hoping) that your code works is huge. With that in mind, I can only imagine that Lean will be of increasing importance to software engineers over time.
 
 ## Notes

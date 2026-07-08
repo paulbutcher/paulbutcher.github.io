@@ -237,7 +237,7 @@ So how do we go about proving that these theorems are true?
 * **Lean's type system:** A theorem is a proof of a _proposition_, and for many years we've known that (given a sufficiently powerful type system) propositions can be represented as types. This is the [Curry–Howard correspondence](https://en.wikipedia.org/wiki/Curry–Howard_correspondence) commonly known as "propositions as types".
   * Proving a proposition is exactly the same as proving that the type that represents that proposition is _inhabited_, which just means that we can find one example of a value of that type.
   * It's really that simple: create a single value of that type and the fact that you've done so is also a proof that the proposition represented by that type is true.
-* **Lean's Theorem Prover:** Lean provides a whole array of _tactics_ who's entire job is finding these values.
+* **Lean's Theorem Prover:** Lean provides a whole array of _tactics_ whose entire job is finding these values.
 
 And that's it. Find an instance of the type and you're done.
 
@@ -254,7 +254,7 @@ Today, however, AI agents are becoming very good indeed at generating proofs.
 * They were created entirely automatically: I did nothing beyond setting Claude Code going (and paying for the tokens 🤷).
 * We don't need to understand them in depth. We just need to know that the theorems we care about are true.
 
-In this, we're different from mathematicians. In most cases, a mathematician won't be happy with a just knowing that something is true, they will also want to know _why_ it's true. Ideally they don't just want a proof of whatever it is they're working on, they want a simple, elegant proof.
+In this, we're different from mathematicians. In most cases, a mathematician won't be happy with just knowing that something is true, they will also want to know _why_ it's true. Ideally they don't just want a proof of whatever it is they're working on, they want a simple, elegant proof.
 
 But in our case, we just want to know that the code we've written (or, more likely, that our AI agent has written on our behalf) is correct. An ugly proof that it's correct is just fine. The theorem is the important bit, the proof an implementation detail (think of it like you think of the machine code that comes out of your compiler).
 

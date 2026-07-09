@@ -1,6 +1,7 @@
 Title: Lean-ing into Software Engineering
 Date: 2026-07-08
 Tags: lean
+Description: We recently crossed a threshold meaning that it's now realistic for mathematicians to automatically verify their proofs. That same threshold is rapidly approaching for software engineering.
 
 The [Lean](https://lean-lang.org) programming language is revolutionising mathematics. More and more mathematical results have been formalised in Lean and it's increasingly becoming a standard part of the mathematician's toolbox.
 

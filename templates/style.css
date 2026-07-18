@@ -125,3 +125,22 @@ code {
 .code-tabs__panel pre {
     margin: 0;
 }
+
+.code-block {
+    margin: 1em 0;
+}
+
+.code-block pre {
+    margin: 0;
+}
+
+.code-block details {
+    margin: 0;
+}
+
+.code-block summary {
+    cursor: pointer;
+    padding: 1em;
+    background: #f3f3f3;
+    color: #444;
+}

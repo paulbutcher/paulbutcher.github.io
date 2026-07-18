@@ -5,9 +5,9 @@ Description: A couple of weeks ago, I hypothesized that the combination of the L
 
 A couple of weeks ago, I published [Lean-ing into Software Engineering](/lean1.html) in which I hypothesized that the combination of the [Lean Programming Language](https://lean-lang.org) and AI-assisted coding meant that we were very close to the point where formal verification was realistic for everyday software engineering.
 
-Since then I've been experimenting further, and I'm now convinced that we're not close: we're already there.
+Since then I've become convinced that we're not close: we're already there.
 
-In this article, I'm going to show you a web application implemented in Lean. As you'll see, it's no more difficult to create a web app this way than it would be in Node, Rails, or any other of the stacks that are popular at the moment. But, crucially, by using Lean we can make hard, mathematically guaranteed, statements about our apps behaviour. We can prove (not demonstrate through testing, but mathematically prove), for example, that certain types of XSS vulnerabilites aren't present.
+In this article, I'm going to show a web application implemented in Lean. As you'll see, it's no more difficult to create a web app this way than it would be in Node, Rails, or any other popular stack. But, crucially, by using Lean we can make hard, mathematically guaranteed statements about our app's behaviour. We can prove (not demonstrate through testing, but mathematically prove), for example, that certain types of XSS vulnerability aren't present.
 
 ## tl;dr
 
@@ -16,11 +16,11 @@ Writing a webapp in Lean is just as easy as in any popular framework, but by doi
 - Many common errors are impossible: they will be caught immediately at compile time (or even earlier) with no need to write tests.
 - Important invariants can be mathematically proven to hold, completely eliminating some classes of both bugs and security vulnerabilities.
 
-[Here](https://github.com/paulbutcher/lean-todomvc) is an implementation of the popular [TodoMVC](https://todomvc.com) web application in Lean, and [here](https://github.com/paulbutcher/lean-webapp) is a minimal Lean webapp which demonstrates the bare minimum necessary.
+[Here](https://github.com/paulbutcher/lean-todomvc) is an implementation of the popular [TodoMVC](https://todomvc.com) web application in Lean, and [here](https://github.com/paulbutcher/lean-webapp) is a minimal Lean webapp.
 
 ## A minimal Lean webapp
 
-I'm going to dive straight in and show a minimal but complete Lean webapp to give you the flavour:
+I'm going to dive straight in and show a minimal but complete Lean webapp:
 
 <div class="code-block">
 <details>
@@ -77,7 +77,7 @@ def main := Async.block do
 
 </div>
 
-If you've done any web programming at all it should be immediately obvious what this app does and how it works. The complete project is available [here](https://github.com/paulbutcher/lean-webapp) if you want to play with it yourself.
+It's immediately obvious what this app does and how it works, even if you don't have any Lean experience. The complete project is available [here](https://github.com/paulbutcher/lean-webapp).
 
 ## Typesafe HTML
 
@@ -126,7 +126,7 @@ The proposition that this theorem is proving is:
 
 You can see the whole theorem, along with its proof, [here](https://github.com/paulbutcher/lean-html/blob/main/HtmlTests/Escape.lean#L50). 
 
-In another language, we would might convince ourselves that our escaping is working by providing tests with examples (and indeed, there are some such [tests in the Lean code](https://github.com/paulbutcher/lean-html/blob/main/HtmlTests/Escape.lean#L7)). And that's a great approach, but it's not a guarantee. Lean allows us to go beyond testing and create code that we can rely upon because we have mathematically proven its behaviour.
+In another language, we would might convince ourselves that our escaping is working by creating tests with examples (and indeed, there are some such [tests in the Lean code](https://github.com/paulbutcher/lean-html/blob/main/HtmlTests/Escape.lean#L7)). And that's a great approach, but it's not a guarantee. Lean allows us to go beyond testing and create code that we can rely upon because we have mathematically proven its behaviour.
 
 The above theorem is not sufficient by itself to prove that our generated HTML isn't vulnerable, we also need to make sure that `escape` is used correctly within the rest of the code, but this can also be proven with similar theorems (take a look at the code to convince yourself that every loophole is covered, and let me know if you think I've missed anything).
 
@@ -134,7 +134,7 @@ The above theorem is not sufficient by itself to prove that our generated HTML i
 
 The other library used by our example is the routing library which implements `routeTable!`. This provides what's commonly called either "named routes" or "reverse routing" which allows a single route definition to be used both for handling incoming requests and to generate links included within generated HTML.
 
-It's important that the forward and reverse portions of such a routing library agree with each other; we don't want to get into situations where we generate links which our router can't then handle. There have, indeed, been cases of several such bugs in high-profile web frameworks, e.g. [Play](https://github.com/playframework/playframework/issues/3050), [Rails](https://github.com/rails/rails/issues/4164). Here's a theorem within the Lean routing library which guarantees the round-trip; that `parsePattern` (the function that takes a string and converts it into a sequence of path segments) and `renderPattern` (the function that takes a sequence of path segments and returns a link) are perfect inverses of each other:
+It's important that the forward and reverse portions of such a routing library agree with each other; we don't want to get into situations where we generate links which our router can't then handle. There have, indeed, been several cases of such bugs in high-profile web frameworks, e.g. [Play](https://github.com/playframework/playframework/issues/3050), [Rails](https://github.com/rails/rails/issues/4164). Here's a theorem within the Lean routing library which guarantees the round-trip; that `parsePattern` (the function that takes a string and converts it into a sequence of path segments) and `renderPattern` (the function that takes a sequence of path segments and returns a link) are perfect inverses of each other:
 
 ```lean
 theorem parsePattern_renderPattern (segs : List PathSeg) (h : ∀ seg ∈ segs, seg.WellFormed) :
@@ -151,4 +151,6 @@ This theorem says:
 
 As a more realistic example, [here](https://github.com/paulbutcher/lean-todomvc) is an implementation of the popular [TodoMVC](https://todomvc.com) web application in Lean. As well as the HTML and routing libraries we've already seen, this makes use of an [HTMX](https://htmx.org) [library](https://github.com/paulbutcher/lean-htmx) (built on top of the HTML library) and a [forms library](https://github.com/paulbutcher/lean-forms).
 
-## 
+## Next Steps
+
+Formal validation as the new standard. Why not?

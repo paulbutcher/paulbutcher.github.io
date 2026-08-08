@@ -3,7 +3,7 @@ Date: 2026-08-08
 Tags: lean
 Description: Further evidence that formally verifying software as a matter of course is feasible.
 
-Over the last couple of weeks, I've been working on a personal project in [Lean](https://lean-lang.org). Six months ago I would have done in Clojure but the combination of Lean and AI assisted software engineering is making formal verification so easy, why wouldn't I choose the additional safety it brings?
+Over the last couple of weeks, I've been working on a personal project in [Lean](https://lean-lang.org). Six months ago I would have used Clojure but the combination of Lean and AI assisted software engineering is making formal verification so easy, why wouldn't I choose the additional safety it brings?
 
 As part of this work, I needed a Markdown parser/renderer. The obvious route would be to wrap something like [cmark-gfm](https://github.com/github/cmark-gfm/) using Lean's FFI but as an experiment I decided to see how far I could get with a pure Lean implementation, and as part of that how far I could go to formally verifying the code's behaviour.
 

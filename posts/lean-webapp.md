@@ -32,6 +32,6 @@ Lean is a strongly typed functional language with a built-in theorem prover. Thi
 
 ## Benefits for AI-assisted software engineering
 
-The above benefits count for a lot by themselves. But they buy a great deal more than just confidence that the software won't crash, infinite loop, or generate malformed output. Lean's combination of strong type safety and formal guarantees provides _really_ strong guardrails for an AI coding agent. My experience has been that the results are much higher quality, take less time, require fewer tokens, and require far (far!) fewer debugging round-trips. It's a cliché (but like all clichés, it exists for a reason) but in Lean, broadly speaking, "if it compiles it works".
+The above benefits count for a lot by themselves, but they buy a great deal more than just confidence that the software won't crash, infinite loop, or generate malformed output. Lean's combination of strong type safety and formal guarantees provides _really_ strong guardrails for an AI coding agent. My experience has been that the results are much higher quality, take less time, require fewer tokens, and require far (far!) fewer debugging round-trips. It's a cliché (but like all clichés, it exists for a reason) but in Lean, broadly speaking, "if it compiles it works".
 
 If you can, I'd encourage you to try Lean. It's much easier than it might appear, and the benefits are huge.

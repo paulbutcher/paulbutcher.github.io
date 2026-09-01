@@ -17,7 +17,7 @@ Lean is a strongly typed functional language with a built-in theorem prover. Thi
   <dt>**Totality**</dt>
   <dd>Nothing in this application is `partial` and nothing in it can panic, and the same holds of every library it's built upon. A loop that reads until its input runs out carries a bound and a proof that it decreases.</dd>
   <dt>**Security properties are theorems**</dt>
-  <dd>Nothing in this application is `partial` and nothing in it can panic, and the same holds of every library it's built upon. A loop that reads until its input runs out carries a bound and a proof that it decreases.</dd>
+  <dd>A page carries its anti-forgery attribute exactly when it has a token to put in it: never announcing one it lacks, never dropping one it has. A sign-in refusal is proved to speak only about the request and never about who owns the address, stated over the whole outcome type.</dd>
   <dt>**Markup is typed and formally verified**</dt>
   <dd>A `<div>` inside a `<p>` is a type error, text content is escaped on the way in, and `Node.render_wellFormed` proves that what comes out is well-formed HTML.</dd>
   <dt>**Routes are strongly typed**</dt>
